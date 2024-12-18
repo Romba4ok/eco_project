@@ -47,7 +47,8 @@ class RequestCheck {
       temperature = jsonData['data']['current']['weather']['tp'].toString();
       humidity = jsonData['data']['current']['weather']['hu'].toString();
       iconRequest = jsonData['data']['current']['weather']['ic'].toString();
-      time = jsonData['data']['current']['weather']['ts'].toString();
+      DateTime now = DateTime.now();
+      time = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
       if (pollutionLevel >= 0 && pollutionLevel <= 50) {
         pollutionLevelText = "Отлично";
         pollutionLevelColor = Color(0xFF00FF00);

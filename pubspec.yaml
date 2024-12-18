@@ -35,6 +35,7 @@ dependencies:
   geolocator:
   permission_handler:
   weather_icons:
+  font_awesome_flutter:
 
 dev_dependencies:
   flutter_test:
@@ -64,6 +65,7 @@ flutter:
      - assets/images/background_home.png
      - assets/images/container1_info.png
      - assets/images/container3_info.png
+     - assets/images/google_logo.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

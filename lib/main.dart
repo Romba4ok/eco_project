@@ -13,6 +13,11 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
         scaffoldBackgroundColor: Color(0xFF131010),
+        appBarTheme: AppBarTheme(
+          iconTheme: IconThemeData(
+            color: Colors.white, // Цвет стрелки "назад" и иконок
+          ),
+        ),
       ),
       home: PageSelection(),
       debugShowCheckedModeBanner: false,

@@ -14,15 +14,6 @@ class PageInfo extends StatefulWidget {
 class _PageInfoState extends State<PageInfo> {
   final AppPermission appPermission = AppPermission();
 
-  String _currentTime = "00:00";
-
-  void _updateTime() {
-    setState(() {
-      DateTime now = DateTime.now();
-      _currentTime = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
-    });
-  }
-
   String? temperature;
   String? state;
   Color? color;
@@ -35,7 +26,6 @@ class _PageInfoState extends State<PageInfo> {
   bool loading = false; // Флаг загрузки
 
   void dataRequest() {
-    _updateTime();
     temperature =
         RequestCheck.temperature; // Обновляем состояние после загрузки данных
     color = RequestCheck.pollutionLevelColor;
@@ -52,9 +42,11 @@ class _PageInfoState extends State<PageInfo> {
   Future<void> handlePermissionCheck() async {
     await await AppPermission.checkAndRequestLocationPermission();
     await RequestCheck.init(); // Ожидаем загрузки данных
-    setState(() {
-      dataRequest();
-    });
+    if (mounted) {
+      setState(() {
+        dataRequest();
+      });
+    }
   }
 
   @override
@@ -483,7 +475,7 @@ class _PageInfoState extends State<PageInfo> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  "$_currentTime",
+                                  "$time",
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,

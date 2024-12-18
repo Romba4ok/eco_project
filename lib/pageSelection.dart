@@ -45,6 +45,7 @@ class _StatePageSelection extends State<PageSelection> {
   Widget build(BuildContext context) {
     AppSizes.init(context);
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
           // Отображаем выбранную страницу
