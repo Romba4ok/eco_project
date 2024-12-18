@@ -50,7 +50,6 @@ class RegistrationState extends State<Registration> {
     }
     return null;
   }
-
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
