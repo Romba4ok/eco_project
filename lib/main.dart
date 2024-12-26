@@ -1,4 +1,5 @@
 import 'package:ecoalmaty/pageSelection.dart';
+import 'package:ecoalmaty/pageSelectionAdmin.dart';
 import 'package:flutter/material.dart';
 
 void main() async {
@@ -19,7 +20,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: PageSelection(),
+      home: PageSelectionAdmin(),
       debugShowCheckedModeBanner: false,
     );
   }

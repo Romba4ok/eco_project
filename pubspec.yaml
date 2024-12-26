@@ -65,6 +65,7 @@ flutter:
      - assets/images/background_home.png
      - assets/images/container1_info.png
      - assets/images/container3_info.png
+     - assets/images/union.png
      - assets/images/google_logo.png
   #   - images/a_dot_ham.jpeg
 
