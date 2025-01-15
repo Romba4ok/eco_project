@@ -43,10 +43,12 @@ class _StatePageSelectionAdmin extends State<PageSelectionAdmin> {
   Widget build(BuildContext context) {
     AppSizes.init(context);
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Row(
         children: [
           // Узкая боковая панель
           Container(
+            height: AppSizes.height,
             decoration: BoxDecoration(
               color: Color(0xFF131010),
               border: Border(

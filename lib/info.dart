@@ -173,7 +173,7 @@ class _PageInfoState extends State<PageInfo> {
                                             style: TextStyle(
                                                 color: Colors.white,
                                                 fontSize:
-                                                    AppSizes.width * 0.045),
+                                                    AppSizes.width * 0.04),
                                           ),
                                         ],
                                       ),

@@ -1,8 +1,21 @@
-class User {
-  static String? name;
-  static String? id;
-  static String? email;
-  static String? password;
-  static String? balance;
-  static bool user = false;
+class CustomUser {
+  final String name;
+  final String state;
+  final String city;
+  final String email;
+  final String password;
+  final String id;
+  final String avatar;
+  final String user_user;
+
+  CustomUser({
+    required this.name,
+    required this.state,
+    required this.city,
+    required this.email,
+    required this.password,
+    required this.id,
+    required this.avatar,
+    required this.user_user,
+  });
 }

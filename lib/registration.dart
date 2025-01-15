@@ -1,10 +1,15 @@
 import 'package:ecoalmaty/AppSizes.dart';
 import 'package:ecoalmaty/authorization.dart';
 import 'package:ecoalmaty/profile.dart';
+import 'package:ecoalmaty/request.dart';
+import 'package:ecoalmaty/user.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Registration extends StatefulWidget {
+  final Function(int) togglePage;
+  Registration({required this.togglePage});
   @override
   State<StatefulWidget> createState() {
     // TODO: implement createState
@@ -58,13 +63,41 @@ class RegistrationState extends State<Registration> {
   late final ProfilePage profilePage;
 
   void _log() {
-    Route route = MaterialPageRoute(builder: (context) => Authorization());
-    Navigator.pushReplacement(context, route);
+    widget.togglePage(0);
   }
 
   final _formKey = GlobalKey<FormState>();
   bool _isObscure = true;
   bool _isObscure2 = true;
+
+  final SupabaseClient supabase = Supabase.instance.client;
+
+  Future<void> _reg() async {
+    try {
+      final res = await supabase.auth.signUp(
+        email: emailController.text,
+        password: passwordController.text,
+      );
+      if (res.user != null) {
+        print(res.user!.id);
+        await Supabase.instance.client.from('users').insert({
+          'uuid': res.user!.id, // UUID пользователя из auth
+          'name': nameController.text,
+          'email': emailController.text,
+          'password': passwordController.text,
+          'state': RequestCheck.state,
+          'city': RequestCheck.city,
+          'avatar': '',
+          'user': 'user',
+        });
+        widget.togglePage(2);
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка: ${error.toString()}')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -288,7 +321,9 @@ class RegistrationState extends State<Registration> {
                   // Растянуть на всю ширину
                   child: TextButton(
                     onPressed: () {
-                      if (_formKey.currentState!.validate()) {}
+                      if (_formKey.currentState!.validate()) {
+                        _reg();
+                      }
                     },
                     child: Text(
                       "Зарегестрироваться",

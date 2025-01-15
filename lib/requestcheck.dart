@@ -2,11 +2,6 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-void main() {
-  final request = Requestcheck();
-  request.exp();
-}
-
 class Requestcheck {
   final String API = "0f21dc0b-4bc6-46e2-85e0-57fbac370543";
   // final String State = "Almaty Qalasy";

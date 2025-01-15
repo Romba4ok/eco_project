@@ -4,6 +4,8 @@ import 'package:ecoalmaty/registration.dart';
 import 'package:flutter/material.dart';
 
 class ProfilePage extends StatefulWidget {
+  final Function(int) togglePage;
+  ProfilePage({required this.togglePage});
   @override
   _StateProfilePage createState() => _StateProfilePage();
 }

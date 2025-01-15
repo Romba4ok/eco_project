@@ -36,6 +36,8 @@ dependencies:
   permission_handler:
   weather_icons:
   font_awesome_flutter:
+  image_picker:
+  supabase_flutter:
 
 dev_dependencies:
   flutter_test:
@@ -67,6 +69,7 @@ flutter:
      - assets/images/container3_info.png
      - assets/images/union.png
      - assets/images/google_logo.png
+     - assets/images/add_image.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

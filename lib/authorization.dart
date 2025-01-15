@@ -1,9 +1,15 @@
 import 'package:ecoalmaty/AppSizes.dart';
+import 'package:ecoalmaty/pageSelectionAdmin.dart';
 import 'package:ecoalmaty/profile.dart';
 import 'package:ecoalmaty/registration.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Authorization extends StatefulWidget {
+  final Function(int) togglePage;
+
+  Authorization({required this.togglePage});
+
   @override
   State<StatefulWidget> createState() {
     return _AuthorizationState();
@@ -36,10 +42,57 @@ class _AuthorizationState extends State<Authorization> {
   final TextEditingController passwordController = TextEditingController();
 
   void _reg() {
-    Route route = MaterialPageRoute(builder: (context) => Registration());
-    Navigator.pushReplacement(context, route);
+    widget.togglePage(1);
   }
 
+  final SupabaseClient supabase = Supabase.instance.client;
+
+  Future<void> _log() async {
+    try {
+      final email = emailController.text;
+      final password = passwordController.text;
+
+      final res = await supabase.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+      print('log');
+
+      User? user = res.user;
+
+      if (user != null) {
+        String id = user.id;
+        print(id);
+        final response = await supabase
+            .from('users')
+            .select('user')
+            .eq('id', user.id)
+            .single();
+        if (response != null && response['user'] != null) {
+          final String userCheck = response['user'];
+          print('user');
+
+          // Проверяем роль пользователя
+          if (userCheck == 'user') {
+            widget.togglePage(2); // Переход для обычного пользователя
+          } else if (userCheck == 'admin') {
+            Route route =
+                MaterialPageRoute(builder: (context) => PageSelectionAdmin());
+            Navigator.pushReplacement(
+                context, route); // Переход для администратора
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Ошибка: Роль пользователя не найдена.')),
+          );
+        }
+      }
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Ошибка: ${error.toString()}')),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -75,7 +128,8 @@ class _AuthorizationState extends State<Authorization> {
                 ),
                 Text(
                   "Привет, с возвращением 👋",
-                  style: TextStyle(fontSize: AppSizes.width * 0.07, color: Colors.white),
+                  style: TextStyle(
+                      fontSize: AppSizes.width * 0.07, color: Colors.white),
                 ),
                 SizedBox(
                   height: AppSizes.height * 0.1,
@@ -175,12 +229,13 @@ class _AuthorizationState extends State<Authorization> {
                       children: <Widget>[
                         Checkbox(
                           value: _value, // Замените null на false или true
-                          onChanged:
-                          _updateChechBox,
+                          onChanged: _updateChechBox,
                         ),
                         Text(
                           "Запомнить меня",
-                          style: TextStyle(fontSize: AppSizes.width * 0.045, color: Colors.white),
+                          style: TextStyle(
+                              fontSize: AppSizes.width * 0.045,
+                              color: Colors.white),
                         ),
                       ],
                     ),
@@ -188,7 +243,10 @@ class _AuthorizationState extends State<Authorization> {
                       onPressed: () {},
                       child: Text(
                         "Забыли пароль?",
-                        style: TextStyle(fontSize: AppSizes.width * 0.045, color: Color(0xFF57B113),),
+                        style: TextStyle(
+                          fontSize: AppSizes.width * 0.045,
+                          color: Color(0xFF57B113),
+                        ),
                       ),
                     ),
                   ],
@@ -200,16 +258,21 @@ class _AuthorizationState extends State<Authorization> {
                   width: double.infinity,
                   height: AppSizes.height * 0.06, // Растянуть на всю ширину
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        _log();
+                      }
+                    },
                     child: Text(
                       "Войти",
-                      style: TextStyle(color: Colors.white, fontSize: AppSizes.width * 0.05),
+                      style: TextStyle(
+                          color: Colors.white, fontSize: AppSizes.width * 0.05),
                     ),
                     style: TextButton.styleFrom(
                       backgroundColor: Color(0xFF57B113),
                       shape: RoundedRectangleBorder(
                         borderRadius:
-                        BorderRadius.circular(10), // Закругление углов
+                            BorderRadius.circular(10), // Закругление углов
                       ),
                     ),
                   ),
@@ -241,7 +304,7 @@ class _AuthorizationState extends State<Authorization> {
                   decoration: BoxDecoration(
                     color: Colors.white, // Задаём цвет фона
                     borderRadius:
-                    BorderRadius.circular(12.0), // Закруглённые углы
+                        BorderRadius.circular(12.0), // Закруглённые углы
                   ),
                   width: double.infinity,
                   height: AppSizes.width * 0.15, // Высота кнопки
