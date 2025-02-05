@@ -245,7 +245,8 @@ class _UsersPageState extends State<UsersPage> {
                                                       width: AppSizes.width *
                                                           0.02),
                                                   SizedBox(
-                                                    width: 150,
+                                                    width:
+                                                        AppSizes.width * 0.45,
                                                     // Установите ширину в пикселях
                                                     child: Text(
                                                       'id: ${user.id}',
@@ -259,7 +260,9 @@ class _UsersPageState extends State<UsersPage> {
                                                   ),
                                                 ],
                                               ),
-                                              SizedBox(height: 16),
+                                              SizedBox(
+                                                  height:
+                                                      AppSizes.height * 0.02),
                                               TextFormField(
                                                 style: TextStyle(
                                                     color: Colors.white),
@@ -372,7 +375,9 @@ class _UsersPageState extends State<UsersPage> {
                                                 ),
                                                 validator: passwordValidator,
                                               ),
-                                              SizedBox(height: 16),
+                                              SizedBox(
+                                                  height:
+                                                      AppSizes.height * 0.02),
                                               Row(
                                                 mainAxisAlignment:
                                                     MainAxisAlignment
@@ -384,9 +389,48 @@ class _UsersPageState extends State<UsersPage> {
                                                       backgroundColor:
                                                           Color(0xFFA3E567),
                                                     ),
-                                                    onPressed: () {
-                                                      if (_formKey.currentState!
-                                                          .validate()) {}
+                                                    onPressed: () async {
+                                                      if (_formKey.currentState!.validate()) {
+                                                        try {
+                                                          // Обновление данных пользователя в Supabase Authentication
+                                                          final authResponse = await supabase.auth.updateUser(
+                                                            UserAttributes(
+                                                              email: emailController.text,
+                                                              password: passwordController.text,
+                                                            ),
+                                                          );
+
+                                                          if (authResponse.user != null) {
+                                                            // Получаем ID пользователя из ответа
+                                                            final userId = authResponse.user!.id;
+                                                            print('userId: $userId'); // Для отладки
+
+                                                            // Обновление данных в таблице 'users'
+                                                            try {
+                                                              await Supabase.instance.client
+                                                                  .from('users')
+                                                                  .update({'password': passwordController.text}).eq('id', userId);
+                                                              Navigator.of(context)
+                                                                  .pop();
+                                                              fetchUsers();
+                                                            } catch (error) {
+                                                              print(error);
+                                                            }
+                                                          } else {
+                                                            // Ошибка при обновлении данных в Supabase Authentication
+                                                            throw 'Ошибка обновления данных пользователя в Authentication';
+                                                          }
+                                                        } catch (error) {
+                                                          // Общий обработчик ошибок
+                                                          print('Произошла ошибка: $error');
+                                                          ScaffoldMessenger.of(context).showSnackBar(
+                                                            SnackBar(
+                                                              content: Text('Произошла ошибка: $error'),
+                                                              backgroundColor: Colors.red,
+                                                            ),
+                                                          );
+                                                        }
+                                                      }
                                                     },
                                                     child: Text('Сохранить'),
                                                   ),

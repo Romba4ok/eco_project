@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:ecoalmaty/AppSizes.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AddPostPage extends StatefulWidget {
   final VoidCallback togglePage;
@@ -51,6 +52,37 @@ class _AddPostPageState extends State<AddPostPage> {
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  Future<void> savePost(File image, String heading, String source) async {
+    try {
+      // Шаг 1: Загрузка изображения в Supabase Storage
+      final fileName =
+          'post_images/${DateTime.now().millisecondsSinceEpoch}.png'; // Уникальное имя файла
+      await Supabase.instance.client.storage
+          .from('posts') // Папка "posts" в Storage
+          .upload(fileName, image);
+
+      // Шаг 2: Получение URL изображения
+      final imageUrl = await Supabase.instance.client.storage
+          .from('posts')
+          .getPublicUrl(fileName); // Получаем публичный URL изображения
+      print(imageUrl);
+      // Шаг 3: Добавление данных о посте в таблицу 'posts'
+      await Supabase.instance.client.from('posts').insert({
+        'image': imageUrl, // UUID пользователя из auth
+        'heading': headingController.text,
+        'source': sourceController.text,
+      });
+      // Сообщение об успешном добавлении
+      print('Пост успешно добавлен в Realtime Database!');
+      if (mounted) {
+        widget.togglePage();
+      }
+    } catch (error) {
+      // Обработка ошибок
+      print('Ошибка: $error');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,8 +117,10 @@ class _AddPostPageState extends State<AddPostPage> {
                       child: TextButton(
                         onPressed: () {},
                         style: TextButton.styleFrom(
-                          alignment: Alignment.topLeft, // Поднимаем содержимое вверх и влево
-                          padding: EdgeInsets.zero,    // Убираем внутренние отступы, если нужно
+                          alignment: Alignment.topLeft,
+                          // Поднимаем содержимое вверх и влево
+                          padding: EdgeInsets
+                              .zero, // Убираем внутренние отступы, если нужно
                         ),
                         child: Padding(
                           padding: EdgeInsets.all(AppSizes.width * 0.02),
@@ -131,8 +165,10 @@ class _AddPostPageState extends State<AddPostPage> {
                           });
                         },
                         style: TextButton.styleFrom(
-                          alignment: Alignment.topLeft, // Поднимаем содержимое вверх и влево
-                          padding: EdgeInsets.zero,    // Убираем внутренние отступы, если нужно
+                          alignment: Alignment.topLeft,
+                          // Поднимаем содержимое вверх и влево
+                          padding: EdgeInsets
+                              .zero, // Убираем внутренние отступы, если нужно
                         ),
                         child: Padding(
                           padding: EdgeInsets.all(AppSizes.width * 0.02),
@@ -283,6 +319,10 @@ class _AddPostPageState extends State<AddPostPage> {
                                 child: TextButton(
                                   onPressed: () {
                                     if (_formKey.currentState!.validate()) {
+                                      savePost(
+                                          _selectedImage!,
+                                          headingController.text,
+                                          sourceController.text);
                                     }
                                   },
                                   child: Center(

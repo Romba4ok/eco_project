@@ -1,11 +1,8 @@
 import 'package:ecoalmaty/AppSizes.dart';
-import 'package:ecoalmaty/geolocation.dart';
 import 'package:ecoalmaty/info.dart';
 import 'package:ecoalmaty/permission.dart';
-import 'package:ecoalmaty/requestcheck.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -16,14 +13,53 @@ class HomePage extends StatefulWidget {
 
 class _StateHomePage extends State<HomePage> {
   final AppPermission appPermission = AppPermission();
+
+  final SupabaseClient supabase = Supabase.instance.client;
+
+  // Список для хранения постов
+  List<Map<String, String>> posts = [];
+  bool isLoading = true;
+
+  Future<void> fetchPosts() async {
+    try {
+      // Получение данных из таблицы posts
+      final response = await supabase.from('posts').select();
+      if (response != null && response is List) {
+        setState(() {
+          posts = response.map((e) {
+            return {
+              'image': e['image'] as String? ?? '', // URL изображения
+              'title': e['heading'] as String? ?? '', // Заголовок
+              'source': e['source'] as String? ?? '', // Источник
+            };
+          }).toList();
+          isLoading = false;
+        });
+      } else {
+        print('Ошибка: Пустой ответ от Supabase');
+        setState(() {
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Ошибка при загрузке данных: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
   Future<void> handlePermissionCheck() async {
     await AppPermission.checkAndRequestLocationPermission();
   }
+
   @override
   void initState() {
     super.initState();
     handlePermissionCheck();
+    fetchPosts();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -101,10 +137,106 @@ class _StateHomePage extends State<HomePage> {
                   ),
                   Padding(
                     padding: EdgeInsets.only(left: AppSizes.width * 0.1),
-                    child: Text('ЛЕНТА НОВОСТЕЙ', style: TextStyle(color: Colors.white, fontSize: AppSizes.width * 0.04),),
+                    child: Text(
+                      'ЛЕНТА НОВОСТЕЙ',
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: AppSizes.width * 0.045),
+                    ),
                   ),
                   SizedBox(
-                    height: AppSizes.height * 0.4,
+                    height: AppSizes.height * 0.03,
+                  ),
+                  isLoading
+                      ? SizedBox(height: AppSizes.height * 0.8, child: Center(child: CircularProgressIndicator()))
+                  :
+                  Container(
+                    height: AppSizes.height * 0.8, // Высота GridView
+                    child: GridView.builder(
+                      padding: EdgeInsets.symmetric(
+                          horizontal: AppSizes.width * 0.02),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2, // Две колонки
+                        mainAxisSpacing: 8, // Отступ между рядами
+                        crossAxisSpacing: 8, // Отступ между колонками
+                        childAspectRatio: 3 / 4, // Соотношение сторон карточки
+                      ),
+                      itemCount: posts.length,
+                      itemBuilder: (context, index) {
+                        final post = posts[index];
+
+                        return GestureDetector(
+                          onTap: () {
+                            print('Tapped on: ${post['title']}');
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black, // Черный фон карточки
+                              borderRadius: BorderRadius.circular(
+                                  12), // Закругленные углы
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: ClipRRect(
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(12),
+                                      topRight: Radius.circular(12),
+                                      bottomLeft: Radius.circular(12),
+                                      // Закругленные углы внизу
+                                      bottomRight: Radius.circular(12),
+                                    ),
+                                    child: SizedBox(
+                                      width: AppSizes.width * 0.45,
+                                      // Ширина изображения
+                                      child: Image.network(
+                                        post['image']!,
+                                        fit: BoxFit
+                                            .cover, // Заполняет контейнер, обрезая края
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: AppSizes.height * 0.005,
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.only(
+                                      left: AppSizes.width * 0.02,
+                                      right: AppSizes.width * 0.02),
+                                  child: Text(
+                                    post['title']!,
+                                    style: TextStyle(
+                                      fontSize: AppSizes.width * 0.05,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                SizedBox(
+                                  height: AppSizes.height * 0.005,
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: AppSizes.width * 0.02),
+                                  child: Text(
+                                    post['source']!,
+                                    style: TextStyle(
+                                      fontSize: AppSizes.width * 0.035,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
@@ -138,8 +270,7 @@ class _StateHomePage extends State<HomePage> {
                         ),
                         child: Center(
                           child: IconButton(
-                            onPressed: () {
-                            },
+                            onPressed: () {},
                             icon: Icon(
                               Icons.assignment,
                               size: AppSizes.height * 0.035,
@@ -160,7 +291,9 @@ class _StateHomePage extends State<HomePage> {
                         child: Center(
                           child: IconButton(
                             onPressed: () {
-                              Route route = MaterialPageRoute(builder: (context) => PageInfo(),);
+                              Route route = MaterialPageRoute(
+                                builder: (context) => PageInfo(),
+                              );
                               Navigator.push(context, route);
                             },
                             icon: Icon(

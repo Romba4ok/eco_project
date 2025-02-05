@@ -81,7 +81,7 @@ class RegistrationState extends State<Registration> {
       if (res.user != null) {
         print(res.user!.id);
         await Supabase.instance.client.from('users').insert({
-          'uuid': res.user!.id, // UUID пользователя из auth
+          'id': res.user!.id, // UUID пользователя из auth
           'name': nameController.text,
           'email': emailController.text,
           'password': passwordController.text,
@@ -93,6 +93,7 @@ class RegistrationState extends State<Registration> {
         widget.togglePage(2);
       }
     } catch (error) {
+      print(error);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Ошибка: ${error.toString()}')),
       );

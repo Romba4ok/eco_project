@@ -1,7 +1,9 @@
 import 'package:ecoalmaty/AppSizes.dart';
 import 'package:ecoalmaty/add_post.dart';
 import 'package:ecoalmaty/edit_post.dart';
+import 'package:ecoalmaty/pageSelection.dart';
 import 'package:ecoalmaty/shop_admin.dart';
+import 'package:ecoalmaty/supabase_config.dart';
 import 'package:ecoalmaty/users_admin.dart';
 import 'package:flutter/material.dart';
 
@@ -14,6 +16,7 @@ class PageSelectionAdmin extends StatefulWidget {
 
 class _StatePageSelectionAdmin extends State<PageSelectionAdmin> {
   int _selectedIndex = 0;
+  final DatabaseService _databaseService = DatabaseService();
 
   final List<Widget Function(VoidCallback)> _pages = [
         (togglePage) => AddPostPage(togglePage: togglePage),
@@ -22,7 +25,13 @@ class _StatePageSelectionAdmin extends State<PageSelectionAdmin> {
         (_) => ShopPage(),
   ];
 
-  void _onItemTapped(int index) {
+  Future<void> _onItemTapped(int index) async {
+    if (index == 4) { // Если нажата кнопка выхода
+      await _databaseService.signOut();
+      Route route = MaterialPageRoute(builder: (context) => PageSelection());
+      Navigator.pushReplacement(context, route);
+      return; // Выходим из функции, не обновляя _selectedIndex
+    }
     setState(() {
       _selectedIndex = index;
     });
@@ -75,6 +84,7 @@ class _StatePageSelectionAdmin extends State<PageSelectionAdmin> {
                       _buildDrawerItem(Icons.edit, 0),
                       _buildDrawerItem(Icons.home, 2),
                       _buildDrawerItem(Icons.shopping_bag, 3),
+                      _buildDrawerItem(Icons.logout, 4),
                     ],
                   ),
                 ),

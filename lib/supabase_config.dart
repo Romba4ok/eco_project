@@ -6,3 +6,10 @@ class SupabaseConfig {
 
   static final SupabaseClient client = SupabaseClient(supabaseUrl, supabaseKey);
 }
+
+class DatabaseService {
+  final SupabaseClient _supabase = Supabase.instance.client;
+  Future<void> signOut() async {
+    await _supabase.auth.signOut();
+  }
+}
