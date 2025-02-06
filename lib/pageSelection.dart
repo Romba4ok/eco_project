@@ -22,12 +22,13 @@ class _StatePageSelection extends State<PageSelection> {
   int _selectedIndex = 0;
   int _profileSubIndex = 0;
   String? userCheck;
+  bool _isLoadingProfile = true; // Переменная для отслеживания загрузки на экране профиля
 
   @override
   void initState() {
     super.initState();
     _initializeApp();
-    checkUser();
+    // checkUser(); // Убираем checkUser из initState, чтобы он запускался только при переходе на экран профиля
   }
 
   Future<void> _initializeApp() async {
@@ -49,18 +50,29 @@ class _StatePageSelection extends State<PageSelection> {
         final String userCheck = response['user'];
         print(userCheck);
         if (userCheck == 'user') {
-          _profileSubIndex = 2;
+          setState(() {
+            _profileSubIndex = 2;
+            _isLoadingProfile = false; // После загрузки данных обновляем состояние
+          });
         } else if (userCheck == 'admin') {
-          Route route =
-          MaterialPageRoute(builder: (context) => PageSelectionAdmin());
-          Navigator.pushReplacement(
-              context, route);
+          setState(() {
+            _isLoadingProfile = false; // После загрузки данных обновляем состояние
+          });
+          Route route = MaterialPageRoute(builder: (context) => PageSelectionAdmin());
+          Navigator.pushReplacement(context, route);
         }
       } else {
+        setState(() {
+          _isLoadingProfile = false; // Если ошибка, то также обновляем состояние
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Ошибка: Роль пользователя не найдена.')),
         );
       }
+    } else {
+      setState(() {
+        _isLoadingProfile = false; // Если пользователь не авторизован
+      });
     }
   }
 
@@ -79,12 +91,16 @@ class _StatePageSelection extends State<PageSelection> {
     setState(() {
       _selectedIndex = index;
     });
+
+    // Если выбрана вкладка профиля, запускаем checkUser для загрузки данных
+    if (index == 1) {
+      checkUser(); // Загружаем данные пользователя только при переходе на экран профиля
+    }
   }
 
   void _onSubPageTapped(int index) {
     setState(() {
       _profileSubIndex = index;
-      // checkUser();
     });
   }
 
@@ -95,10 +111,14 @@ class _StatePageSelection extends State<PageSelection> {
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
-          _selectedIndex == 0
-              ? _pages[_selectedIndex]
-              : _profileSubPages[_profileSubIndex](
-              _onSubPageTapped),
+          // Если показываем профиль, то показываем экран загрузки
+          _selectedIndex == 1
+              ? _isLoadingProfile
+              ? Center(
+            child: CircularProgressIndicator(), // Экран загрузки
+          )
+              : _profileSubPages[_profileSubIndex](_onSubPageTapped)
+              : _pages[_selectedIndex], // Для других экранов просто отображаем страницы
           Align(
             alignment: Alignment.bottomRight,
             child: Container(
@@ -144,3 +164,4 @@ class _StatePageSelection extends State<PageSelection> {
     );
   }
 }
+

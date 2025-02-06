@@ -1,6 +1,7 @@
 import 'package:ecoalmaty/AppSizes.dart';
 import 'package:ecoalmaty/info.dart';
 import 'package:ecoalmaty/permission.dart';
+import 'package:ecoalmaty/supabase_config.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -20,32 +21,15 @@ class _StateHomePage extends State<HomePage> {
   List<Map<String, String>> posts = [];
   bool isLoading = true;
 
-  Future<void> fetchPosts() async {
-    try {
-      // Получение данных из таблицы posts
-      final response = await supabase.from('posts').select();
-      if (response != null && response is List) {
-        setState(() {
-          posts = response.map((e) {
-            return {
-              'image': e['image'] as String? ?? '', // URL изображения
-              'title': e['heading'] as String? ?? '', // Заголовок
-              'source': e['source'] as String? ?? '', // Источник
-            };
-          }).toList();
-          isLoading = false;
-        });
-      } else {
-        print('Ошибка: Пустой ответ от Supabase');
-        setState(() {
-          isLoading = false;
-        });
-      }
-    } catch (e) {
-      print('Ошибка при загрузке данных: $e');
-      setState(() {
-        isLoading = false;
-      });
+  final DatabaseService _databaseService = DatabaseService();
+
+  Future<void> loadPosts() async {
+    List<Map<String, String>> fetchedPosts = await _databaseService.fetchPosts();
+    if(mounted) {
+    setState(() {
+      posts = fetchedPosts;
+      isLoading = false;
+    });
     }
   }
 
@@ -57,7 +41,7 @@ class _StateHomePage extends State<HomePage> {
   void initState() {
     super.initState();
     handlePermissionCheck();
-    fetchPosts();
+    loadPosts();
   }
 
   @override
@@ -65,9 +49,9 @@ class _StateHomePage extends State<HomePage> {
     return Scaffold(
       body: Stack(
         children: [
-          ListView(
-            children: [
-              Column(
+          SingleChildScrollView(
+            child:
+            Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
@@ -240,7 +224,7 @@ class _StateHomePage extends State<HomePage> {
                   ),
                 ],
               ),
-            ],
+
           ),
           // AppBar должен быть сверху и фиксированным
           Positioned(

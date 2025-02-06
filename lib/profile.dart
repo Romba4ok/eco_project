@@ -1,8 +1,10 @@
-// lib/profile.dart
-import 'package:ecoalmaty/authorization.dart';
-import 'package:ecoalmaty/registration.dart';
+import 'dart:io';
+import 'package:ecoalmaty/AppSizes.dart';
+import 'package:ecoalmaty/request.dart';
 import 'package:ecoalmaty/supabase_config.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProfilePage extends StatefulWidget {
   final Function(int) togglePage;
@@ -16,141 +18,619 @@ class ProfilePage extends StatefulWidget {
 class _StateProfilePage extends State<ProfilePage> {
   String selector = 'authorization';
   final DatabaseService _databaseService = DatabaseService();
+  final SupabaseClient supabase = Supabase.instance.client;
+  String name = 'Загрузка';
+  String email = 'Загрузка';
+  String password = 'Загрузка';
+  String avatar = '';
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController newPasswordController = TextEditingController();
+  final TextEditingController submitPasswordController =
+  TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Map<String, String>? userData;
+  bool isLoading = true;
+
+  Future<void> _loadUserData() async {
+    User? user = supabase.auth.currentUser;
+    if (user != null) {
+      String userId = user.id;
+      Map<String, String>? fetchedUser = await _databaseService.fetchUser(
+          userId);
+      if (mounted) {
+        setState(() {
+          userData = fetchedUser;
+          name = fetchedUser?['name'] ?? 'Загрузка';
+          email = fetchedUser?['email'] ?? 'Загрузка';
+          password = fetchedUser?['password'] ?? 'Загрузка';
+          avatar = fetchedUser?['avatar'] ?? '';
+          passwordController.text = password;
+          newPasswordController.clear();
+          submitPasswordController.clear();
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _updateUser() async {
+    if (mounted) {
+      // Сначала выполняем асинхронную операцию, а затем обновляем состояние
+      await _databaseService.updateUser(
+        name: nameController.text,
+        city: RequestCheck.city,
+        state: RequestCheck.state,
+        email: emailController.text,
+        password: newPasswordController.text,
+        newAvatar: _selectedImage, // Только если новая аватарка
+      );
+      _loadUserData();
+      newPasswordController.text = '';
+      nameController.text = '';
+      emailController.text = '';
+      submitPasswordController.text = '';
+    }
+  }
+
+  File? _selectedImage; // Здесь сохраняется выбранное изображение как файл
+
+// Логика для загрузки изображения, например, с устройства
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _selectedImage =
+            File(pickedFile.path); // Устанавливаем выбранное изображение
+      });
+    }
+  }
+
+  final _formKeyUpdatePassword = GlobalKey<FormState>();
+  bool _isObscure = true;
+  bool _isObscure2 = true;
+  bool _isObscure3 = true;
+
+  String? nameValidator(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Введите имя';
+    }
+    return null;
+  }
+
+  String? emailValidator(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Введите email';
+    }
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(value)) {
+      return 'Неверный формат email';
+    }
+    return null;
+  }
+
+  String? passwordValidator(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Введите пароль';
+    }
+    if (value.length < 8) {
+      return 'Пароль должен содержать не менее 8 символов';
+    }
+    return null;
+  }
+
+  String? newPasswordValidator(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Введите пароль';
+    }
+    if (value.length < 8) {
+      return 'Пароль должен содержать не менее 8 символов';
+    }
+    return null;
+  }
+
+  String? confirmPasswordValidator(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Подтвердите пароль';
+    }
+    if (value != newPasswordController.text) {
+      return 'Пароли не совпадают';
+    }
+    return null;
+  }
 
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {},
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.settings, color: Colors.white),
-            onPressed: () {
-              _databaseService.signOut();
-              widget.togglePage(0);
-            },
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Фото профиля
-            Stack(
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: AppSizes.width * 0.07),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                CircleAvatar(
-                  radius: 50,
-                  backgroundImage: AssetImage('assets/avatar.jpg'),
+                SizedBox(
+                  height: AppSizes.height * 0.1,
                 ),
-                Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Container(
-                    padding: EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.black, width: 2),
+                Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: AppSizes.width * 0.17,
+                      backgroundImage: _selectedImage != null
+                          ? FileImage(_selectedImage!)
+                          : (avatar.isNotEmpty
+                          ? NetworkImage(avatar)
+                          : null),
+                      backgroundColor:
+                      avatar.isEmpty && _selectedImage == null
+                          ? Colors.white
+                          : Colors.transparent,
+                      child: avatar.isEmpty && _selectedImage == null
+                          ? Text(
+                        name[0],
+                        style: TextStyle(
+                            color: Colors.black,
+                            fontSize: AppSizes.width * 0.08),
+                      )
+                          : null,
                     ),
-                    child: Icon(Icons.edit, color: Colors.white, size: 18),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: () async {
+                          await _pickImage(); // Вызываем функцию выбора изображения
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Color(0xFF03E050),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.edit,
+                              color: Colors.black, size: AppSizes.width * 0.05),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: AppSizes.height * 0.01),
+                Text(
+                  name,
+                  style: TextStyle(
+                      color: Colors.white, fontSize: AppSizes.width * 0.06),
+                ),
+                SizedBox(height: AppSizes.height * 0.02),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  // Устанавливаем выравнивание по левому краю
+                  child: Text(
+                    'Ваш ник',
+                    style: TextStyle(
+                        color: Colors.white, fontSize: AppSizes.width * 0.045),
+                  ),
+                ),
+                SizedBox(height: AppSizes.height * 0.01),
+                TextFormField(
+                  style: TextStyle(color: Colors.white),
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    prefixIcon: Icon(
+                      Icons.person,
+                      color: Color(0xFF717171), // Задаем белый цвет для иконки
+                      size: AppSizes.width * 0.06,
+                    ),
+                    filled: true,
+                    fillColor: Colors.transparent,
+                    hintStyle: TextStyle(
+                      color: Color(0xFF717171),
+                    ),
+                    hintText: name,
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFF717171)),
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFF717171)),
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.red),
+                      // Цвет границы при ошибке
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.red),
+                      // Граница при фокусе и ошибке
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                  ),
+                  validator: nameValidator,
+                ),
+                SizedBox(
+                  height: AppSizes.height * 0.02,
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  // Устанавливаем выравнивание по левому краю
+                  child: Text(
+                    'Почта',
+                    style: TextStyle(
+                        color: Colors.white, fontSize: AppSizes.width * 0.045),
+                  ),
+                ),
+                SizedBox(height: AppSizes.height * 0.01),
+                TextFormField(
+                  style: TextStyle(color: Colors.white),
+                  controller: emailController,
+                  decoration: InputDecoration(
+                    prefixIcon: Icon(
+                      Icons.email,
+                      color: Color(0xFF717171), // Задаем белый цвет для иконки
+                      size: AppSizes.width * 0.06,
+                    ),
+                    filled: true,
+                    fillColor: Colors.transparent,
+                    hintStyle: TextStyle(
+                      color: Color(0xFF717171),
+                    ),
+                    hintText: email,
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFF717171)),
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFF717171)),
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.red),
+                      // Цвет границы при ошибке
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.red),
+                      // Граница при фокусе и ошибке
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                  ),
+                  validator: emailValidator,
+                ),
+                SizedBox(
+                  height: AppSizes.height * 0.02,
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  // Устанавливаем выравнивание по левому краю
+                  child: Text(
+                    'Пароль',
+                    style: TextStyle(
+                        color: Colors.white, fontSize: AppSizes.width * 0.045),
+                  ),
+                ),
+                SizedBox(height: AppSizes.height * 0.01),
+                TextFormField(
+                  style: TextStyle(color: Colors.white),
+                  controller: passwordController,
+                  obscureText: _isObscure,
+                  decoration: InputDecoration(
+                    prefixIcon: Icon(
+                      Icons.password,
+                      color: Color(0xFF717171), // Задаем белый цвет для иконки
+                      size: AppSizes.width * 0.06,
+                    ),
+                    filled: true,
+                    fillColor: Colors.transparent,
+                    hintStyle: TextStyle(
+                      color: Color(0xFF717171),
+                    ),
+                    hintText: "Ваш пароль",
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFF717171)),
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Color(0xFF717171)),
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.red),
+                      // Цвет границы при ошибке
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.red),
+                      // Граница при фокусе и ошибке
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isObscure ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _isObscure = !_isObscure; // Переключение состояния
+                        });
+                      },
+                    ),
+                  ),
+                  validator: passwordValidator,
+                ),
+                SizedBox(
+                  height: AppSizes.height * 0.05,
+                ),
+                Form(
+                  key: _formKeyUpdatePassword,
+                  child: Column(
+                    children: [
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        // Устанавливаем выравнивание по левому краю
+                        child: Text(
+                          'Смена пароля',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: AppSizes.width * 0.045),
+                        ),
+                      ),
+                      SizedBox(height: AppSizes.height * 0.01),
+                      TextFormField(
+                        style: TextStyle(color: Colors.white),
+                        controller: newPasswordController,
+                        obscureText: _isObscure2,
+                        decoration: InputDecoration(
+                          prefixIcon: Icon(
+                            Icons.password,
+                            color: Color(0xFF717171),
+                            // Задаем белый цвет для иконки
+                            size: AppSizes.width * 0.06,
+                          ),
+                          filled: true,
+                          fillColor: Colors.transparent,
+                          hintStyle: TextStyle(
+                            color: Color(0xFF717171),
+                          ),
+                          hintText: "Новый пароль",
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF717171)),
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF717171)),
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.red),
+                            // Цвет границы при ошибке
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.red),
+                            // Граница при фокусе и ошибке
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _isObscure2
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: Colors.grey,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _isObscure2 =
+                                !_isObscure2; // Переключение состояния
+                              });
+                            },
+                          ),
+                        ),
+                        validator: newPasswordValidator,
+                      ),
+                      SizedBox(
+                        height: AppSizes.height * 0.02,
+                      ),
+                      TextFormField(
+                        style: TextStyle(color: Colors.white),
+                        controller: submitPasswordController,
+                        obscureText: _isObscure3,
+                        decoration: InputDecoration(
+                          prefixIcon: Icon(
+                            Icons.password,
+                            color: Color(0xFF717171),
+                            // Задаем белый цвет для иконки
+                            size: AppSizes.width * 0.06,
+                          ),
+                          filled: true,
+                          fillColor: Colors.transparent,
+                          hintStyle: TextStyle(
+                            color: Color(0xFF717171),
+                          ),
+                          hintText: "Подтвердите пароль",
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF717171)),
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF717171)),
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.red),
+                            // Цвет границы при ошибке
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.red),
+                            // Граница при фокусе и ошибке
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _isObscure3
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: Colors.grey,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _isObscure3 =
+                                !_isObscure3; // Переключение состояния
+                              });
+                            },
+                          ),
+                        ),
+                        validator: confirmPasswordValidator,
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  height: AppSizes.height * 0.04,
+                ),
+                OutlinedButton(
+                  onPressed: () {
+                    if (newPasswordController.text.isNotEmpty) {
+                      if (_formKeyUpdatePassword.currentState!.validate()) {
+                        _updateUser();
+                      }
+                    } else {
+                      _updateUser();
+                    }
+                  },
+                  style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(
+                        vertical: AppSizes.height * 0.02,
+                        horizontal: AppSizes.width * 0.33),
+                    side: BorderSide(color: Color(0xFF68E30B)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text('Сохранить',
+                      style: TextStyle(
+                          color: Color(0xFF68E30B),
+                          fontSize: AppSizes.width * 0.045)),
+                ),
+                SizedBox(
+                  height: AppSizes.height * 0.2,
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              actions: [
+                Padding(
+                  padding: EdgeInsets.only(
+                      top: AppSizes.height * 0.01,
+                      right: AppSizes.width * 0.03),
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.settings,
+                      color: Colors.white,
+                      size: AppSizes.width * 0.08,
+                    ),
+                    onPressed: () {
+                      _showCustomDialog(context);
+                    },
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 10),
-            Text(
-              'Чилловый парень',
-              style: TextStyle(color: Colors.white, fontSize: 18),
-            ),
-            SizedBox(height: 20),
+          ),
+        ],
+      ),
+    );
+  }
 
-            // Поля ввода
-            ProfileTextField(
-                label: 'Ваш ник', icon: Icons.person, value: 'Чилловый парень'),
-            ProfileTextField(
-                label: 'Почта',
-                icon: Icons.email,
-                value: 'Cherniyremenb@gmail.com',
-                enabled: false),
-            ProfileTextField(
-                label: 'Пароль', icon: Icons.lock, isPassword: true),
-            ProfileTextField(
-                label: 'Новый пароль',
-                icon: Icons.lock_outline,
-                isPassword: true),
-            ProfileTextField(
-                label: 'Подтвердите пароль',
-                icon: Icons.lock_outline,
-                isPassword: true),
+  void _showCustomDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Color(0xFF1E1E1E),
+          contentPadding: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildListTile("Поддержка"),
+              _buildMenuItem(context, Icons.subscriptions, "Моя подписка", () =>
+                  _handleAction(context, "Моя подписка")),
+              _buildMenuItem(context, Icons.help, "Помощь и поддержка", () =>
+                  _handleAction(context, "Помощь и поддержка")),
+              _buildMenuItem(context, Icons.info, "Условия и политика", () =>
+                  _handleAction(context, "Условия и политика")),
+              _buildListTile("Кэш и сотовая связь"),
+              _buildMenuItem(context, Icons.delete, "Освободить место", () =>
+                  _handleAction(context, "Освободить место")),
+              _buildMenuItem(
+                  context, Icons.data_saver_off, "Экономия данных", () =>
+                  _handleAction(context, "Экономия данных")),
+              _buildListTile("Действия"),
+              _buildMenuItem(context, Icons.report, "Сообщить о проблеме", () =>
+                  _handleAction(context, "Сообщить о проблеме")),
+              _buildMenuItem(
+                  context, Icons.person_add, "Добавить аккаунт", () =>
+                  _handleAction(context, "Добавить аккаунт")),
+              _buildMenuItem(context, Icons.exit_to_app, "Выйти", () =>
+                  _handleAction(context, "Выйти")),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
-            SizedBox(height: 20),
-            OutlinedButton(
-              onPressed: () {},
-              style: OutlinedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 40),
-                side: BorderSide(color: Colors.green),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
-              ),
-              child: Text('Сохранить',
-                  style: TextStyle(color: Colors.green, fontSize: 16)),
-            ),
-            SizedBox(height: 30),
-          ],
+  Widget _buildListTile(String title) {
+    return Padding(
+      padding: const EdgeInsets.all(10.0),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: AppSizes.width * 0.05,
+            color: Colors.white
+          ),
         ),
       ),
     );
   }
-}
 
-// Виджет текстового поля
-class ProfileTextField extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final String? value;
-  final bool isPassword;
-  final bool enabled;
-
-  const ProfileTextField({
-    required this.label,
-    required this.icon,
-    this.value,
-    this.isPassword = false,
-    this.enabled = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8),
-      child: TextField(
-        obscureText: isPassword,
-        enabled: enabled,
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(color: Colors.white),
-          prefixIcon: Icon(icon, color: Colors.grey),
-          filled: true,
-          fillColor: Colors.black54,
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.white38),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.green),
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        style: TextStyle(color: Colors.white),
-        controller: value != null ? TextEditingController(text: value) : null,
-      ),
+  Widget _buildMenuItem(BuildContext context, IconData icon, String title,
+      VoidCallback onTap) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.white,),
+      title: Text(title, style: TextStyle(color: Colors.white, fontSize: AppSizes.width * 0.045),),
+      onTap: () {
+        Navigator.of(context).pop();
+        onTap();
+      },
     );
+  }
+
+  void _handleAction(BuildContext context, String action) {
+    if (action == "Выйти") {
+      _databaseService.signOut();
+      widget.togglePage(0);
+    }
   }
 }

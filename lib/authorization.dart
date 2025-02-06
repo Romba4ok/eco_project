@@ -2,6 +2,7 @@ import 'package:ecoalmaty/AppSizes.dart';
 import 'package:ecoalmaty/pageSelectionAdmin.dart';
 import 'package:ecoalmaty/profile.dart';
 import 'package:ecoalmaty/registration.dart';
+import 'package:ecoalmaty/supabase_config.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -47,51 +48,18 @@ class _AuthorizationState extends State<Authorization> {
 
   final SupabaseClient supabase = Supabase.instance.client;
 
+  final DatabaseService _databaseService = DatabaseService();
+
   Future<void> _log() async {
-    try {
-      final email = emailController.text;
-      final password = passwordController.text;
+    final email = emailController.text;
+    final password = passwordController.text;
 
-      final res = await supabase.auth.signInWithPassword(
-        email: email,
-        password: password,
-      );
-      print('log');
-
-      User? user = res.user;
-
-      if (user != null) {
-        String id = user.id;
-        print(id);
-        final response = await supabase
-            .from('users')
-            .select('user')
-            .eq('id', user.id)
-            .single();
-        if (response != null && response['user'] != null) {
-          final String userCheck = response['user'];
-          print('user');
-
-          // Проверяем роль пользователя
-          if (userCheck == 'user') {
-            widget.togglePage(2); // Переход для обычного пользователя
-          } else if (userCheck == 'admin') {
-            Route route =
-                MaterialPageRoute(builder: (context) => PageSelectionAdmin());
-            Navigator.pushReplacement(
-                context, route); // Переход для администратора
-          }
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Ошибка: Роль пользователя не найдена.')),
-          );
-        }
-      }
-    } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка: ${error.toString()}')),
-      );
-    }
+    _databaseService.logIn(
+      email: email,
+      password: password,
+      context: context,
+      togglePage: widget.togglePage,
+    );
   }
 
   @override

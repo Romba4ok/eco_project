@@ -1,10 +1,8 @@
 import 'package:ecoalmaty/AppSizes.dart';
-import 'package:ecoalmaty/authorization.dart';
 import 'package:ecoalmaty/profile.dart';
 import 'package:ecoalmaty/request.dart';
-import 'package:ecoalmaty/user.dart';
+import 'package:ecoalmaty/supabase_config.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Registration extends StatefulWidget {
@@ -72,32 +70,18 @@ class RegistrationState extends State<Registration> {
 
   final SupabaseClient supabase = Supabase.instance.client;
 
+  final DatabaseService _databaseService = DatabaseService();
+
   Future<void> _reg() async {
-    try {
-      final res = await supabase.auth.signUp(
-        email: emailController.text,
-        password: passwordController.text,
-      );
-      if (res.user != null) {
-        print(res.user!.id);
-        await Supabase.instance.client.from('users').insert({
-          'id': res.user!.id, // UUID пользователя из auth
-          'name': nameController.text,
-          'email': emailController.text,
-          'password': passwordController.text,
-          'state': RequestCheck.state,
-          'city': RequestCheck.city,
-          'avatar': '',
-          'user': 'user',
-        });
-        widget.togglePage(2);
-      }
-    } catch (error) {
-      print(error);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка: ${error.toString()}')),
-      );
-    }
+    _databaseService.signUp(
+      email: emailController.text,
+      password: passwordController.text,
+      name: nameController.text,
+      city: RequestCheck.city ?? '',
+      state: RequestCheck.state ?? '',
+      context: context,
+      togglePage: widget.togglePage,
+    );
   }
 
   @override

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:ecoalmaty/AppSizes.dart';
+import 'package:ecoalmaty/supabase_config.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -52,34 +53,15 @@ class _AddPostPageState extends State<AddPostPage> {
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  Future<void> savePost(File image, String heading, String source) async {
-    try {
-      // Шаг 1: Загрузка изображения в Supabase Storage
-      final fileName =
-          'post_images/${DateTime.now().millisecondsSinceEpoch}.png'; // Уникальное имя файла
-      await Supabase.instance.client.storage
-          .from('posts') // Папка "posts" в Storage
-          .upload(fileName, image);
+  final DatabaseService _databaseService = DatabaseService();
 
-      // Шаг 2: Получение URL изображения
-      final imageUrl = await Supabase.instance.client.storage
-          .from('posts')
-          .getPublicUrl(fileName); // Получаем публичный URL изображения
-      print(imageUrl);
-      // Шаг 3: Добавление данных о посте в таблицу 'posts'
-      await Supabase.instance.client.from('posts').insert({
-        'image': imageUrl, // UUID пользователя из auth
-        'heading': headingController.text,
-        'source': sourceController.text,
-      });
-      // Сообщение об успешном добавлении
-      print('Пост успешно добавлен в Realtime Database!');
-      if (mounted) {
-        widget.togglePage();
-      }
-    } catch (error) {
-      // Обработка ошибок
-      print('Ошибка: $error');
+  Future<void> _savePost() async {
+    if (_selectedImage != null && headingController.text.isNotEmpty && sourceController.text.isNotEmpty) {
+      // Вызываем метод сервиса для сохранения поста
+      await _databaseService.savePost(_selectedImage!, headingController.text, sourceController.text);
+    } else {
+      // Показываем сообщение, если что-то не заполнено
+      print('Пожалуйста, заполните все поля и выберите изображение.');
     }
   }
 
@@ -319,10 +301,7 @@ class _AddPostPageState extends State<AddPostPage> {
                                 child: TextButton(
                                   onPressed: () {
                                     if (_formKey.currentState!.validate()) {
-                                      savePost(
-                                          _selectedImage!,
-                                          headingController.text,
-                                          sourceController.text);
+                                      _savePost();
                                     }
                                   },
                                   child: Center(
