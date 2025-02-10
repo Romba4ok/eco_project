@@ -22,7 +22,8 @@ class _StatePageSelection extends State<PageSelection> {
   int _selectedIndex = 0;
   int _profileSubIndex = 0;
   String? userCheck;
-  bool _isLoadingProfile = true; // Переменная для отслеживания загрузки на экране профиля
+  bool _isLoadingProfile =
+      true; // Переменная для отслеживания загрузки на экране профиля
 
   @override
   void initState() {
@@ -52,18 +53,22 @@ class _StatePageSelection extends State<PageSelection> {
         if (userCheck == 'user') {
           setState(() {
             _profileSubIndex = 2;
-            _isLoadingProfile = false; // После загрузки данных обновляем состояние
+            _isLoadingProfile =
+                false; // После загрузки данных обновляем состояние
           });
         } else if (userCheck == 'admin') {
           setState(() {
-            _isLoadingProfile = false; // После загрузки данных обновляем состояние
+            _isLoadingProfile =
+                false; // После загрузки данных обновляем состояние
           });
-          Route route = MaterialPageRoute(builder: (context) => PageSelectionAdmin());
+          Route route =
+              MaterialPageRoute(builder: (context) => PageSelectionAdmin());
           Navigator.pushReplacement(context, route);
         }
       } else {
         setState(() {
-          _isLoadingProfile = false; // Если ошибка, то также обновляем состояние
+          _isLoadingProfile =
+              false; // Если ошибка, то также обновляем состояние
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Ошибка: Роль пользователя не найдена.')),
@@ -77,27 +82,25 @@ class _StatePageSelection extends State<PageSelection> {
   }
 
   final List<Widget Function(Function(int))> _profileSubPages = [
-        (togglePage) => Authorization(togglePage: togglePage),
-        (togglePage) => Registration(togglePage: togglePage),
-        (togglePage) => ProfilePage(togglePage: togglePage),
+    (togglePage) => Authorization(togglePage: togglePage),
+    (togglePage) => Registration(togglePage: togglePage),
+    (togglePage) => ProfilePage(togglePage: togglePage),
   ];
 
-  final List<Widget> _pages = [
-    HomePage(),
-    Container(),
+  final List<Widget Function(Function(int))> _pages = [
+    (togglePage) => HomePage(togglePage: togglePage),
+    (togglePage) => Container(),
   ];
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
+      if (index == 1) {
+        _isLoadingProfile = true; // Показываем индикатор загрузки
+        checkUser();
+      }
     });
-
-    // Если выбрана вкладка профиля, запускаем checkUser для загрузки данных
-    if (index == 1) {
-      checkUser(); // Загружаем данные пользователя только при переходе на экран профиля
-    }
   }
-
   void _onSubPageTapped(int index) {
     setState(() {
       _profileSubIndex = index;
@@ -112,13 +115,12 @@ class _StatePageSelection extends State<PageSelection> {
       body: Stack(
         children: [
           // Если показываем профиль, то показываем экран загрузки
-          _selectedIndex == 1
-              ? _isLoadingProfile
-              ? Center(
-            child: CircularProgressIndicator(), // Экран загрузки
-          )
-              : _profileSubPages[_profileSubIndex](_onSubPageTapped)
-              : _pages[_selectedIndex], // Для других экранов просто отображаем страницы
+          if (_selectedIndex == 1)
+            _isLoadingProfile
+                ? Center(child: CircularProgressIndicator())
+                : _profileSubPages[_profileSubIndex](_onSubPageTapped)
+          else
+            _pages[_selectedIndex](_onItemTapped),
           Align(
             alignment: Alignment.bottomRight,
             child: Container(
@@ -164,4 +166,3 @@ class _StatePageSelection extends State<PageSelection> {
     );
   }
 }
-

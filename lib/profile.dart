@@ -19,10 +19,10 @@ class _StateProfilePage extends State<ProfilePage> {
   String selector = 'authorization';
   final DatabaseService _databaseService = DatabaseService();
   final SupabaseClient supabase = Supabase.instance.client;
-  String name = 'Загрузка';
-  String email = 'Загрузка';
-  String password = 'Загрузка';
-  String avatar = '';
+  String name = DatabaseService.userName ?? 'Загрузка';
+  String email =  DatabaseService.userEmail ?? 'Загрузка';
+  String password =  DatabaseService.userPassword ?? 'Загрузка';
+  String avatar =  DatabaseService.userAvatar ?? '';
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();

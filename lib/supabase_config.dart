@@ -16,12 +16,13 @@ class DatabaseService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
   // Переменные для хранения данных
-  String? userName;
-  String? userEmail;
-  String? userCity;
-  String? userState;
-  String? userAvatar;
-  String? userRole;
+  static String? userName;
+  static String? userEmail;
+  static String? userCity;
+  static String? userState;
+  static String? userAvatar;
+  static String? userPassword;
+  static String? userRole;
 
   Future<void> signOut() async {
     await _supabase.auth.signOut();
@@ -57,6 +58,7 @@ class DatabaseService {
           userEmail = response['email'];
           userCity = response['city'];
           userState = response['state'];
+          userPassword = response['password'];
           userAvatar = response['avatar'];
           print("User role: $userRole");
 
@@ -110,6 +112,13 @@ class DatabaseService {
           'avatar': '',
           'user': 'user',
         });
+        userRole = 'user';
+        userName = name;
+        userEmail = email;
+        userCity = state;
+        userState = city;
+        userPassword = password;
+        userAvatar = '';
 
         togglePage(2); // Переход на страницу пользователя после регистрации
       }
@@ -149,6 +158,13 @@ class DatabaseService {
       await _supabase.from('users').select().eq('id', userId).single();
 
       if (response != null) {
+        userRole = response['user'];
+        userName = response['name'];
+        userEmail = response['email'];
+        userCity = response['city'];
+        userState = response['state'];
+        userPassword = response['password'];
+        userAvatar = response['avatar'];
         return {
           'name': response['name'] as String? ?? '',
           'id': response['id'] as String? ?? '',

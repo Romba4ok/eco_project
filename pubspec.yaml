@@ -68,8 +68,15 @@ flutter:
      - assets/images/container1_info.png
      - assets/images/container3_info.png
      - assets/images/union.png
+     - assets/images/union_white.png
+     - assets/images/balance_container_background.png
+     - assets/images/balance_container_background2.png
+     - assets/images/balance_container_background3.png
+     - assets/images/balance_container_background4.png
      - assets/images/google_logo.png
      - assets/images/add_image.png
+     - assets/images/balance_background.png
+     - assets/images/container_balance.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
