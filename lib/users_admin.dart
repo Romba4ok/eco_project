@@ -1,5 +1,5 @@
-import 'package:ecoalmaty/AppSizes.dart';
-import 'package:ecoalmaty/user.dart';
+import 'package:Eco/appSizes.dart';
+import 'package:Eco/user.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

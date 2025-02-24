@@ -1,7 +1,8 @@
 import 'dart:io';
-import 'package:ecoalmaty/AppSizes.dart';
-import 'package:ecoalmaty/request.dart';
-import 'package:ecoalmaty/supabase_config.dart';
+
+import 'package:Eco/appSizes.dart';
+import 'package:Eco/request.dart';
+import 'package:Eco/supabase_config.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

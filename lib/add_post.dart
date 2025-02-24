@@ -1,12 +1,12 @@
 import 'dart:io';
-import 'package:ecoalmaty/AppSizes.dart';
-import 'package:ecoalmaty/supabase_config.dart';
+import 'package:Eco/appSizes.dart';
+import 'package:Eco/supabase_config.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AddPostPage extends StatefulWidget {
-  final VoidCallback togglePage;
+  final Function(int) togglePage;
 
   AddPostPage({required this.togglePage});
 
@@ -143,7 +143,8 @@ class _AddPostPageState extends State<AddPostPage> {
                       child: TextButton(
                         onPressed: () {
                           setState(() {
-                            widget.togglePage();
+                            debugPrint('1');
+                            widget.togglePage(1);
                           });
                         },
                         style: TextButton.styleFrom(
@@ -184,6 +185,33 @@ class _AddPostPageState extends State<AddPostPage> {
                   ],
                 ),
                 SizedBox(height: AppSizes.height * 0.03),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.add,
+                          color: Color(0xFFA3E567),
+                        ),
+                        SizedBox(
+                          width: AppSizes.width * 0.01,
+                        ),
+                        Text(
+                          'Добавить пост',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: AppSizes.width * 0.05,
+                          ),
+                          softWrap:
+                          true, // Включаем softWrap для переноса текста
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                SizedBox(height: AppSizes.height * 0.01),
                 Container(
                   width: AppSizes.width,
                   decoration: BoxDecoration(
@@ -335,68 +363,83 @@ class ImagePickerFormField extends FormField<File?> {
   ImagePickerFormField({
     Key? key,
     File? initialValue,
-    required Future<void> Function(FormFieldState<File?> fieldState)
-        onPickImage,
+    String? imageUrl, // Добавленный параметр для ссылки на изображение
+    required Future<void> Function(FormFieldState<File?> fieldState) onPickImage,
     FormFieldValidator<File?>? validator,
   }) : super(
-          key: key,
-          initialValue: initialValue,
-          validator: validator,
-          builder: (state) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                GestureDetector(
-                  onTap: () => onPickImage(state),
-                  child: Container(
-                    height: AppSizes.height * 0.17,
-                    width: AppSizes.width,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20.0),
-                      color: Color(0xFF292626),
-                    ),
-                    child: state.value == null
-                        ? Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Image.asset(
-                                'assets/images/add_image.png',
-                                width: AppSizes.width * 0.07,
-                                height: AppSizes.height * 0.03,
-                              ),
-                              SizedBox(
-                                height: AppSizes.height * 0.007,
-                              ),
-                              Text(
-                                'Добавить изображение',
-                                style: TextStyle(
-                                  color: Color(0xFF909090),
-                                  fontSize: AppSizes.width * 0.04,
-                                ),
-                              ),
-                            ],
-                          )
-                        : ClipRRect(
-                            borderRadius: BorderRadius.circular(20.0),
-                            child: Image.file(
-                              state.value!,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              height: double.infinity,
-                            ),
-                          ),
-                  ),
+    key: key,
+    initialValue: initialValue,
+    validator: validator,
+    builder: (state) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GestureDetector(
+            onTap: () => onPickImage(state),
+            child: Container(
+              height: AppSizes.height * 0.17,
+              width: AppSizes.width,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20.0),
+                color: Color(0xFF292626),
+              ),
+              child: state.value != null
+                  ? ClipRRect(
+                borderRadius: BorderRadius.circular(20.0),
+                child: Image.file(
+                  state.value!,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
                 ),
-                if (state.hasError)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      state.errorText!,
-                      style: TextStyle(color: Colors.red, fontSize: 14.0),
-                    ),
-                  ),
-              ],
-            );
-          },
-        );
+              )
+                  : (imageUrl != null && imageUrl.isNotEmpty
+                  ? ClipRRect(
+                borderRadius: BorderRadius.circular(20.0),
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  errorBuilder: (context, error, stackTrace) {
+                    return _buildPlaceholder();
+                  },
+                ),
+              )
+                  : _buildPlaceholder()),
+            ),
+          ),
+          if (state.hasError)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text(
+                state.errorText!,
+                style: TextStyle(color: Colors.red, fontSize: 14.0),
+              ),
+            ),
+        ],
+      );
+    },
+  );
+
+  static Widget _buildPlaceholder() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Image.asset(
+          'assets/images/add_image.png',
+          width: AppSizes.width * 0.07,
+          height: AppSizes.height * 0.03,
+        ),
+        SizedBox(height: AppSizes.height * 0.007),
+        Text(
+          'Добавить изображение',
+          style: TextStyle(
+            color: Color(0xFF909090),
+            fontSize: AppSizes.width * 0.04,
+          ),
+        ),
+      ],
+    );
+  }
 }

@@ -1,8 +1,5 @@
-import 'package:ecoalmaty/AppSizes.dart';
-import 'package:ecoalmaty/pageSelectionAdmin.dart';
-import 'package:ecoalmaty/profile.dart';
-import 'package:ecoalmaty/registration.dart';
-import 'package:ecoalmaty/supabase_config.dart';
+import 'package:Eco/appSizes.dart';
+import 'package:Eco/supabase_config.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 

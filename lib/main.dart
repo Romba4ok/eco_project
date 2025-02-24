@@ -1,5 +1,5 @@
-import 'package:ecoalmaty/pageSelection.dart';
-import 'package:ecoalmaty/supabase_config.dart';
+import 'package:Eco/pageSelection.dart';
+import 'package:Eco/supabase_config.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 

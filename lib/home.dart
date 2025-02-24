@@ -1,9 +1,12 @@
-import 'package:ecoalmaty/AppSizes.dart';
-import 'package:ecoalmaty/balance.dart';
-import 'package:ecoalmaty/info.dart';
-import 'package:ecoalmaty/permission.dart';
-import 'package:ecoalmaty/supabase_config.dart';
+import 'package:Eco/appSizes.dart';
+import 'package:Eco/balance.dart';
+import 'package:Eco/examples.dart';
+import 'package:Eco/info.dart';
+import 'package:Eco/permission.dart';
+import 'package:Eco/supabase_config.dart';
+import 'package:Eco/training_examples1.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HomePage extends StatefulWidget {
@@ -46,6 +49,21 @@ class _StateHomePage extends State<HomePage> {
     super.initState();
     handlePermissionCheck();
     loadPosts();
+  }
+
+  Future<void> _checkIfFirstTime() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool hasSeenOnboarding = prefs.getBool('examples_page') ?? false;
+
+    if (!hasSeenOnboarding) {
+      await prefs.setBool(
+          'examples_page', true);
+      Route route = MaterialPageRoute(builder: (context) => TrainingExamples1());
+      Navigator.pushReplacement(context, route);
+    } else {
+      Route route = MaterialPageRoute(builder: (context) => ExamplesPage());
+      Navigator.pushReplacement(context, route);
+    }
   }
 
   @override
@@ -266,7 +284,15 @@ class _StateHomePage extends State<HomePage> {
                         ),
                         child: Center(
                           child: IconButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              User? user = supabase.auth.currentUser;
+                              if (user != null) {
+                                _checkIfFirstTime();
+                              } else {
+                                print('Передача в togglePage(1)');  // Проверка
+                                widget.togglePage(1);
+                              }
+                            },
                             icon: Icon(
                               Icons.assignment,
                               size: AppSizes.height * 0.035,

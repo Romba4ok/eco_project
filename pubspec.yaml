@@ -1,4 +1,4 @@
-name: ecoalmaty
+name: Eco
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -38,6 +38,23 @@ dependencies:
   font_awesome_flutter:
   image_picker:
   supabase_flutter:
+  shared_preferences:
+  flutter_launcher_icons:
+  flutter_native_splash:
+
+
+flutter_native_splash:
+  background_image: "assets/app/loadPage.png"  # Путь к изображению
+  android: true
+  ios: true
+  android_12:
+    color: "#131010"
+    image: "assets/app/loadLogo.png"
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/app/logo.png"
 
 dev_dependencies:
   flutter_test:
@@ -77,8 +94,23 @@ flutter:
      - assets/images/add_image.png
      - assets/images/balance_background.png
      - assets/images/container_balance.png
+     - assets/images/currency_background.png
+     - assets/images/coin_currency.png
+     - assets/images/background_training_shop1.png
+     - assets/images/container_training_shop1.png
+     - assets/images/container_training_shop2.png
+     - assets/images/page_1.png
+     - assets/images/page_2.png
+     - assets/images/background_training_shop2.png
+     - assets/app/logo.png
+     - assets/app/loadPage.png
+     - assets/app/loadLogo.png
+     - assets/images/background_training_examples1.png
+     - assets/images/background_training_examples2.png
+     - assets/images/container_training_examples1.png
+     - assets/images/container_training_examples2.png
+     - assets/images/container_training_examples3.png
   #   - images/a_dot_ham.jpeg
-
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

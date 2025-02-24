@@ -1,6 +1,6 @@
-import 'package:ecoalmaty/AppSizes.dart';
-import 'package:ecoalmaty/permission.dart';
-import 'package:ecoalmaty/request.dart';
+import 'package:Eco/appSizes.dart';
+import 'package:Eco/permission.dart';
+import 'package:Eco/request.dart';
 import 'package:flutter/material.dart';
 import "package:percent_indicator/percent_indicator.dart";
 
@@ -14,26 +14,23 @@ class PageInfo extends StatefulWidget {
 class _PageInfoState extends State<PageInfo> {
   final AppPermission appPermission = AppPermission();
 
-  String? temperature;
   String? state;
   Color? color;
   String? ecoText;
   String? humidity;
   String? time;
   int? pollutionLevel;
-  Icon? icon;
-  bool isLoading = true; // Флаг загрузки
-  bool loading = false; // Флаг загрузки
+  bool isLoading = true;
+  bool loading = false;
+  List<String> weekdaysRu = ["пн", "вт", "ср", "чт", "пт", "сб", "вс"];
+  List<String> days = [];
 
   void dataRequest() {
-    temperature =
-        RequestCheck.temperature; // Обновляем состояние после загрузки данных
     color = RequestCheck.pollutionLevelColor;
     ecoText = RequestCheck.pollutionLevelText;
     pollutionLevel = RequestCheck.pollutionLevel;
     humidity = RequestCheck.humidity;
     time = RequestCheck.time;
-    icon = RequestCheck.icon;
     state = RequestCheck.state;
     isLoading = false; // Убираем флаг загрузки
   }
@@ -52,22 +49,57 @@ class _PageInfoState extends State<PageInfo> {
   @override
   void initState() {
     super.initState();
+    getUpcomingDays();
     loading = RequestCheck.loading;
     if (!loading) {
       handlePermissionCheck();
-    }
-    else {
+    } else {
       setState(() {
         dataRequest();
       });
     }
   }
 
+  void getUpcomingDays() {
+    DateTime today = DateTime.now();
+
+    days = List.generate(3, (index) {
+      DateTime date = today.add(Duration(days: index + 1));
+      return weekdaysRu[
+          date.weekday - 1]; // `weekday` начинается с 1 (понедельник)
+    });
+
+    print(days); // Например: ["четверг", "пятница", "суббота"]
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
       return Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: Container(
+          width: AppSizes.width,
+          height: AppSizes.height,
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/app/loadPage.png'),
+              // Путь к изображению
+              fit: BoxFit.cover, // Растянуть изображение на весь контейнер
+            ),
+          ),
+          child: Center(
+            child: Container(
+              width: AppSizes.width * 0.4,
+              height: AppSizes.height * 0.35,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/app/loadLogo.png'),
+                  // Путь к изображению
+                  fit: BoxFit.cover, // Растянуть изображение на весь контейнер
+                ),
+              ),
+            ),
+          ),
+        ),
       );
     }
 
@@ -126,7 +158,7 @@ class _PageInfoState extends State<PageInfo> {
                                             MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
-                                            '$temperature°C',
+                                            '${RequestCheck.temperatures[0]}°C',
                                             style: TextStyle(
                                                 color: Colors.white,
                                                 fontSize:
@@ -144,7 +176,7 @@ class _PageInfoState extends State<PageInfo> {
                                                         AppSizes.width * 0.035),
                                               ),
                                               Text(
-                                                'Осадки:0%',
+                                                'Осадки: ${RequestCheck.forecast[0]['pop'] * 100}%',
                                                 style: TextStyle(
                                                     color: Colors.white,
                                                     fontSize:
@@ -403,7 +435,7 @@ class _PageInfoState extends State<PageInfo> {
                                 Row(
                                   children: [
                                     Icon(
-                                      icon?.icon,
+                                      RequestCheck.iconList[0],
                                       color: Colors.white,
                                       size: AppSizes.width * 0.1,
                                     ),
@@ -411,7 +443,7 @@ class _PageInfoState extends State<PageInfo> {
                                       width: AppSizes.width * 0.02,
                                     ),
                                     Text(
-                                      "$temperature",
+                                      "${RequestCheck.temperatures[0]}",
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,
@@ -426,11 +458,11 @@ class _PageInfoState extends State<PageInfo> {
                                 Column(
                                   children: [
                                     Icon(
-                                      Icons.sunny,
+                                      RequestCheck.iconList[1],
                                       color: Colors.white,
                                       size: AppSizes.width * 0.07,
                                     ),
-                                    Text('ср',
+                                    Text(days[0],
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontSize: AppSizes.width * 0.05,
@@ -440,12 +472,12 @@ class _PageInfoState extends State<PageInfo> {
                                 Column(
                                   children: [
                                     Icon(
-                                      Icons.sunny,
+                                      RequestCheck.iconList[2],
                                       color: Colors.white,
                                       size: AppSizes.width * 0.07,
                                     ),
                                     Text(
-                                      'чт',
+                                      days[1],
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: AppSizes.width * 0.05,
@@ -456,12 +488,12 @@ class _PageInfoState extends State<PageInfo> {
                                 Column(
                                   children: [
                                     Icon(
-                                      Icons.sunny,
+                                      RequestCheck.iconList[3],
                                       color: Colors.white,
                                       size: AppSizes.width * 0.07,
                                     ),
                                     Text(
-                                      'пт',
+                                      days[2],
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: AppSizes.width * 0.05,

@@ -1,8 +1,12 @@
-import 'package:ecoalmaty/AppSizes.dart';
-import 'package:ecoalmaty/pageSelection.dart';
-import 'package:ecoalmaty/supabase_config.dart';
+import 'package:Eco/appSizes.dart';
+import 'package:Eco/currency_info.dart';
+import 'package:Eco/pageSelection.dart';
+import 'package:Eco/shop.dart';
+import 'package:Eco/supabase_config.dart';
+import 'package:Eco/training_shop1.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class BalancePage extends StatefulWidget {
@@ -39,6 +43,21 @@ class _BalancePageState extends State<BalancePage> {
           name = fetchedUser?['name'] ?? 'Загрузка';
         });
       }
+    }
+  }
+
+  Future<void> _checkIfFirstTime() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool hasSeenOnboarding = prefs.getBool('seen_onboarding') ?? false;
+
+    if (!hasSeenOnboarding) {
+      await prefs.setBool(
+          'seen_onboarding', true);
+      Route route = MaterialPageRoute(builder: (context) => TrainingShop1());
+      Navigator.pushReplacement(context, route);
+    } else {
+      Route route = MaterialPageRoute(builder: (context) => ShopPage());
+      Navigator.pushReplacement(context, route);
     }
   }
 
@@ -96,7 +115,7 @@ class _BalancePageState extends State<BalancePage> {
                               ),
                               SizedBox(width: AppSizes.width * 0.03),
                               Text(
-                                '1 220 200',
+                               '${DatabaseService.balance}',
                                 style: TextStyle(
                                   fontSize: AppSizes.width * 0.08,
                                   fontWeight: FontWeight.bold,
@@ -229,7 +248,9 @@ class _BalancePageState extends State<BalancePage> {
                               children: [
                                 GestureDetector(
                                   onTap: () {
-                                    
+                                    Route route = MaterialPageRoute(
+                                        builder: (context) => CurrencyInfo());
+                                    Navigator.pushReplacement(context, route);
                                   },
                                   child: Container(
                                     width: AppSizes.width * 0.43,
@@ -282,49 +303,55 @@ class _BalancePageState extends State<BalancePage> {
                                 SizedBox(
                                   height: AppSizes.height * 0.04,
                                 ),
-                                Container(
-                                  width: AppSizes.width * 0.43,
-                                  height: AppSizes.height * 0.155,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(16),
-                                    // border: Border.all(
-                                    //   color: Color(0xFFA7EC6A), // Цвет границы
-                                    //   width: 2,
-                                    // ),
-                                    image: DecorationImage(
-                                      image: AssetImage(
-                                          'assets/images/balance_container_background3.png'),
-                                      // Путь к изображению
-                                      fit: BoxFit
-                                          .cover, // Растянуть изображение на весь контейнер
+                                GestureDetector(
+                                  onTap: () {
+                                    _checkIfFirstTime();
+                                  },
+                                  child: Container(
+                                    width: AppSizes.width * 0.43,
+                                    height: AppSizes.height * 0.155,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(16),
+                                      // border: Border.all(
+                                      //   color: Color(0xFFA7EC6A), // Цвет границы
+                                      //   width: 2,
+                                      // ),
+                                      image: DecorationImage(
+                                        image: AssetImage(
+                                            'assets/images/balance_container_background3.png'),
+                                        // Путь к изображению
+                                        fit: BoxFit
+                                            .cover, // Растянуть изображение на весь контейнер
+                                      ),
                                     ),
-                                  ),
-                                  child: Padding(
-                                    padding:
-                                        EdgeInsets.all(AppSizes.width * 0.03),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Магазин',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: AppSizes.width * 0.06,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                        Text(
-                                          'покупка вещей за \nвнутреннюю валюту',
-                                          style: TextStyle(
+                                    child: Padding(
+                                      padding:
+                                          EdgeInsets.all(AppSizes.width * 0.03),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Магазин',
+                                            style: TextStyle(
                                               color: Colors.white,
-                                              fontSize: AppSizes.width * 0.03),
-                                          textAlign: TextAlign.start,
-                                        ),
-                                      ],
+                                              fontSize: AppSizes.width * 0.06,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          Text(
+                                            'покупка вещей за \nвнутреннюю валюту',
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize:
+                                                    AppSizes.width * 0.03),
+                                            textAlign: TextAlign.start,
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),

@@ -1,6 +1,5 @@
 import 'dart:io';
-
-import 'package:ecoalmaty/pageSelectionAdmin.dart';
+import 'package:Eco/pageSelectionAdmin.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -23,6 +22,7 @@ class DatabaseService {
   static String? userAvatar;
   static String? userPassword;
   static String? userRole;
+  static int? balance;
 
   Future<void> signOut() async {
     await _supabase.auth.signOut();
@@ -48,10 +48,10 @@ class DatabaseService {
 
         final response = await _supabase
             .from('users')
-            .select('user, name, email, state, city, avatar')
+            .select('user, name, email, state, city, avatar, balance')
             .eq('id', user.id)
             .single();
-
+        print(response);
         if (response != null && response['user'] != null) {
           userRole = response['user'];
           userName = response['name'];
@@ -60,6 +60,8 @@ class DatabaseService {
           userState = response['state'];
           userPassword = response['password'];
           userAvatar = response['avatar'];
+          balance = response['balance'];
+          print(response['balance']);
           print("User role: $userRole");
 
           if (userRole == 'user') {
@@ -137,9 +139,10 @@ class DatabaseService {
       if (response != null && response is List) {
         return response.map((e) {
           return {
-            'image': e['image'] as String? ?? '', // URL изображения
-            'title': e['heading'] as String? ?? '', // Заголовок
-            'source': e['source'] as String? ?? '', // Источник
+            'id': e['id'].toString(), // Преобразуем ID в строку
+            'image': e['image'] as String? ?? '',
+            'title': e['heading'] as String? ?? '',
+            'source': e['source'] as String? ?? '',
           };
         }).toList();
       } else {
@@ -154,8 +157,7 @@ class DatabaseService {
 
   Future<Map<String, String>?> fetchUser(String userId) async {
     try {
-      final response =
-      await _supabase.from('users').select().eq('id', userId).single();
+      final response = await _supabase.from('users').select().eq('id', userId).single();
 
       if (response != null) {
         userRole = response['user'];
@@ -165,15 +167,18 @@ class DatabaseService {
         userState = response['state'];
         userPassword = response['password'];
         userAvatar = response['avatar'];
+        balance = response['balance']; // balance остается int
+
         return {
           'name': response['name'] as String? ?? '',
-          'id': response['id'] as String? ?? '',
+          'id': response['id'] as String ?? '',
           'email': response['email'] as String? ?? '',
           'password': response['password'] as String? ?? '',
           'state': response['state'] as String? ?? '',
           'city': response['city'] as String? ?? '',
           'avatar': response['avatar'] as String? ?? '',
           'user': response['user'] as String? ?? '',
+          'balance': response['balance'] != null ? response['balance'].toString() : '0', // int -> String
         };
       } else {
         print('Ошибка: Пользователь не найден');
@@ -217,6 +222,82 @@ class DatabaseService {
     }
   }
 
+  Future<void> updatePost({
+    required int postId,
+    String? newHeading,
+    String? newSource,
+    File? newImage,
+  }) async {
+    try {
+      // Проверяем существование поста
+      final postData = await _supabase.from('posts').select('image').eq('id', postId).single();
+      if (postData == null) {
+        print('Ошибка: Пост не найден.');
+        return;
+      }
+
+      final currentImageUrl = postData['image'] as String?;
+      Map<String, dynamic> updatedData = {};
+
+      // Обновление заголовка и источника
+      if (newHeading != null && newHeading.isNotEmpty) updatedData['heading'] = newHeading;
+      if (newSource != null && newSource.isNotEmpty) updatedData['source'] = newSource;
+
+      // Работа с изображением
+      if (newImage != null) {
+        // Если загружаемая картинка такая же, обновление не требуется
+        if (currentImageUrl != null && currentImageUrl == newImage.path) {
+          print('Изображение не изменилось, обновление не требуется.');
+        } else {
+          // Загружаем новое изображение перед удалением старого
+          final newFileName = 'post_images/${DateTime.now().millisecondsSinceEpoch}.png';
+          final uploadResponse = await _supabase.storage.from('posts').upload(newFileName, newImage);
+
+          if (uploadResponse.isEmpty) {
+            throw Exception('Ошибка при загрузке нового изображения.');
+          }
+
+          // Получаем новый URL изображения
+          final newImageUrl = _supabase.storage.from('posts').getPublicUrl(newFileName);
+          updatedData['image'] = newImageUrl;
+
+          // Удаление старого изображения
+          if (currentImageUrl != null && currentImageUrl.isNotEmpty) {
+            try {
+              final filePath = _getStoragePath(currentImageUrl);
+              final deleteResponse = await _supabase.storage.from('posts').remove([filePath]);
+
+              if (deleteResponse.isNotEmpty) {
+                print('Старое изображение успешно удалено.');
+              } else {
+                print('Ошибка при удалении старого изображения.');
+              }
+            } catch (e) {
+              print('Ошибка при удалении изображения: $e');
+            }
+          }
+        }
+      }
+
+      // Обновление поста в базе данных
+      if (updatedData.isNotEmpty) {
+        await _supabase.from('posts').update(updatedData).eq('id', postId);
+        print('Пост успешно обновлен.');
+      } else {
+        print('Нет изменений для обновления.');
+      }
+    } catch (e) {
+      print('Ошибка при обновлении поста: $e');
+    }
+  }
+
+// Вспомогательная функция для получения пути файла из URL
+  String _getStoragePath(String url) {
+    Uri uri = Uri.parse(url);
+    return uri.path.replaceFirst('/storage/v1/object/public/posts/', '');
+  }
+
+
   Future<void> updateUser({
     String? name,
     String? city,
@@ -245,10 +326,9 @@ class DatabaseService {
       // Обновление пароля в Auth
       if (password != null && password.isNotEmpty) {
         await _supabase.auth.updateUser(UserAttributes(password: password));
+        await _supabase.from('users').update({'password': password}).eq('id', userId);
         print('Пароль успешно обновлен.');
       }
-
-      await _supabase.from('users').update({'password': password}).eq('id', userId);
       print('Пароль успешно обновлен в базе данных.');
 
       // Работа с аватаркой

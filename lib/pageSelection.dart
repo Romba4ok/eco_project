@@ -1,11 +1,11 @@
-import 'package:ecoalmaty/AppSizes.dart';
-import 'package:ecoalmaty/authorization.dart';
-import 'package:ecoalmaty/home.dart';
-import 'package:ecoalmaty/pageSelectionAdmin.dart';
-import 'package:ecoalmaty/permission.dart';
-import 'package:ecoalmaty/profile.dart';
-import 'package:ecoalmaty/registration.dart';
-import 'package:ecoalmaty/request.dart';
+import 'package:Eco/appSizes.dart';
+import 'package:Eco/authorization.dart';
+import 'package:Eco/home.dart';
+import 'package:Eco/pageSelectionAdmin.dart';
+import 'package:Eco/permission.dart';
+import 'package:Eco/profile.dart';
+import 'package:Eco/registration.dart';
+import 'package:Eco/request.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -47,6 +47,7 @@ class _StatePageSelection extends State<PageSelection> {
           .select('user')
           .eq('id', user.id)
           .single();
+      print(response);
       if (response != null && response['user'] != null) {
         final String userCheck = response['user'];
         print(userCheck);
@@ -101,6 +102,7 @@ class _StatePageSelection extends State<PageSelection> {
       }
     });
   }
+
   void _onSubPageTapped(int index) {
     setState(() {
       _profileSubIndex = index;
@@ -117,7 +119,32 @@ class _StatePageSelection extends State<PageSelection> {
           // Если показываем профиль, то показываем экран загрузки
           if (_selectedIndex == 1)
             _isLoadingProfile
-                ? Center(child: CircularProgressIndicator())
+                ? Container(
+                    width: AppSizes.width,
+                    height: AppSizes.height,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage('assets/app/loadPage.png'),
+                        // Путь к изображению
+                        fit: BoxFit
+                            .cover, // Растянуть изображение на весь контейнер
+                      ),
+                    ),
+                    child: Center(
+                      child: Container(
+                        width: AppSizes.width * 0.4,
+                        height: AppSizes.height * 0.35,
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: AssetImage('assets/app/loadLogo.png'),
+                            // Путь к изображению
+                            fit: BoxFit
+                                .cover, // Растянуть изображение на весь контейнер
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
                 : _profileSubPages[_profileSubIndex](_onSubPageTapped)
           else
             _pages[_selectedIndex](_onItemTapped),
