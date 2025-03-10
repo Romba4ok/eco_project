@@ -132,11 +132,18 @@ class _UsersPageState extends State<UsersPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             CircleAvatar(
-                              backgroundColor: Colors.green,
-                              child: Text(
+                              radius: AppSizes.width * 0.05,
+                              backgroundImage: user.avatar.isNotEmpty ? NetworkImage(user.avatar) : null,
+                              backgroundColor: user.avatar.isEmpty ? Colors.white : Colors.transparent,
+                              child: user.avatar.isEmpty
+                                  ? Text(
                                 user.name[0],
-                                style: TextStyle(color: Colors.white),
-                              ),
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: AppSizes.width * 0.07,
+                                ),
+                              )
+                                  : null,
                             ),
                             SizedBox(
                               width: AppSizes.width * 0.01,
@@ -223,14 +230,17 @@ class _UsersPageState extends State<UsersPage> {
                                               Row(
                                                 children: [
                                                   CircleAvatar(
-                                                    backgroundColor:
-                                                        Colors.green,
-                                                    child: Text(
-                                                      user.name[0]
-                                                          .toUpperCase(),
+                                                    backgroundImage: user.avatar.isNotEmpty ? NetworkImage(user.avatar) : null,
+                                                    backgroundColor: user.avatar.isEmpty ? Colors.white : Colors.transparent,
+                                                    child: user.avatar.isEmpty
+                                                        ? Text(
+                                                      user.name[0],
                                                       style: TextStyle(
-                                                          color: Colors.white),
-                                                    ),
+                                                        color: Colors.black,
+                                                        fontSize: AppSizes.width * 0.07,
+                                                      ),
+                                                    )
+                                                        : null,
                                                   ),
                                                   SizedBox(
                                                       width: AppSizes.width *

@@ -20,7 +20,7 @@ class EditPostPage extends StatefulWidget {
 class _EditPostPageState extends State<EditPostPage> {
   bool _isExpanded = true;
   bool isLoading = true;
-  String? imageUrl;
+  String imageUrl = '';
 
   final DatabaseService _databaseService = DatabaseService();
   List<Map<String, String>> posts = [];
@@ -72,6 +72,13 @@ class _EditPostPageState extends State<EditPostPage> {
     return null;
   }
 
+  String? contentValidator(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Введите заголовок';
+    }
+    return null;
+  }
+
   String? sourceValidator(String? value) {
     if (value == null || value.isEmpty) {
       return 'Введите источник';
@@ -81,9 +88,9 @@ class _EditPostPageState extends State<EditPostPage> {
 
   final TextEditingController headingController = TextEditingController();
   final TextEditingController sourceController = TextEditingController();
+  final TextEditingController contentController= TextEditingController();
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
 
   @override
   Widget build(BuildContext context) {
@@ -270,282 +277,445 @@ class _EditPostPageState extends State<EditPostPage> {
                               final post = posts[index];
                               return GestureDetector(
                                 onTap: () {
-                                  int id = int.tryParse(post['id'].toString()) ?? 0;
+                                  int id =
+                                      int.tryParse(post['id'].toString()) ?? 0;
                                   sourceController.text = post['source'] ?? '';
                                   headingController.text = post['title'] ?? '';
-                                  imageUrl = post['image'];
+                                  imageUrl = post['image'] ?? '';
+                                  contentController.text = post['content'] ?? '';
                                   print(imageUrl);
                                   showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        backgroundColor: Color(0xFF393535),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(20.0),
-                                        ),
-                                        content: SizedBox(
-                                          width: AppSizes.width * 0.75,
-                                          height: AppSizes.height * 0.55,
-                                          // 60% от высоты экрана
-                                          child: SingleChildScrollView(
-                                            // Прокрутка, если контент выходит за границы
-                                            child: Form(
-                                              key: _formKey,
-                                              child: Padding(
-                                                padding: EdgeInsets.all(
-                                                    AppSizes.width * 0.04),
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    ImagePickerFormField(
-                                                      initialValue: _selectedImage,
-                                                      imageUrl: imageUrl, // Ссылка на изображение
-                                                      onPickImage: _pickImage,
-                                                      validator: (value) {
-                                                        if (value == null && (imageUrl == null || imageUrl!.isEmpty)) {
-                                                          return 'Пожалуйста, выберите изображение.';
-                                                        }
-                                                        return null;
-                                                      },
-                                                    ),
-                                                    SizedBox(
-                                                        height:
-                                                            AppSizes.height *
-                                                                0.02),
-                                                    Text(
-                                                      'Введите заголовок:',
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize:
-                                                            AppSizes.width *
-                                                                0.04,
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          backgroundColor: Color(0xFF131010),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(20.0),
+                                            side: BorderSide(
+                                              // Граница
+                                              color: Color(0xFF333333),
+                                              // Цвет границы
+                                              width: 2.0, // Толщина границы
+                                            ),
+                                          ),
+                                          content: SizedBox(
+                                            width: AppSizes.width * 0.75,
+                                            height: AppSizes.height * 0.65,
+                                            // 60% от высоты экрана
+                                            child: SingleChildScrollView(
+                                              // Прокрутка, если контент выходит за границы
+                                              child: Form(
+                                                key: _formKey,
+                                                child: Padding(
+                                                  padding: EdgeInsets.all(
+                                                      AppSizes.width * 0.04),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      ImagePickerFormField(
+                                                        initialValue:
+                                                            _selectedImage,
+                                                        imageUrl: imageUrl,
+                                                        // Ссылка на изображение
+                                                        onPickImage: _pickImage,
+                                                        validator: (value) {
+                                                          if (value == null &&
+                                                              (imageUrl ==
+                                                                      null ||
+                                                                  imageUrl!
+                                                                      .isEmpty)) {
+                                                            return 'Пожалуйста, выберите изображение.';
+                                                          }
+                                                          return null;
+                                                        },
                                                       ),
-                                                    ),
-                                                    SizedBox(
-                                                        height:
-                                                            AppSizes.height *
-                                                                0.01),
-                                                    TextFormField(
-                                                      style: TextStyle(
-                                                          color: Colors.white),
-                                                      controller:
-                                                          headingController,
-                                                      decoration:
-                                                          InputDecoration(
-                                                        hintText:
-                                                            "Ввести текст...",
-                                                        hintStyle: TextStyle(
-                                                            color: Color(
-                                                                0xFF909090)),
-                                                        filled: true,
-                                                        fillColor:
-                                                            Color(0xFF393535),
-                                                        enabledBorder:
-                                                            OutlineInputBorder(
-                                                          borderSide: BorderSide(
-                                                              color: Color(
-                                                                  0xFF565656)),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      12.0),
-                                                        ),
-                                                        focusedBorder:
-                                                            OutlineInputBorder(
-                                                          borderSide: BorderSide(
-                                                              color: Color(
-                                                                  0xFF565656)),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      12.0),
-                                                        ),
-                                                        errorBorder:
-                                                            OutlineInputBorder(
-                                                          borderSide:
-                                                              BorderSide(
-                                                                  color: Colors
-                                                                      .red),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      12.0),
-                                                        ),
-                                                        focusedErrorBorder:
-                                                            OutlineInputBorder(
-                                                          borderSide:
-                                                              BorderSide(
-                                                                  color: Colors
-                                                                      .red),
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(
-                                                                      12.0),
-                                                        ),
-                                                      ),
-                                                      validator:
-                                                          headingValidator,
-                                                      maxLines: 6,
-                                                      keyboardType:
-                                                          TextInputType
-                                                              .multiline,
-                                                    ),
-                                                    SizedBox(
-                                                        height:
-                                                            AppSizes.height *
-                                                                0.02),
-                                                    Text(
-                                                      'Источник:',
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize:
-                                                            AppSizes.width *
-                                                                0.04,
-                                                      ),
-                                                    ),
-                                                    SizedBox(
-                                                        height:
-                                                            AppSizes.height *
-                                                                0.01),
-                                                    Row(
-                                                      children: [
-                                                        Expanded(
-                                                          child: TextFormField(
-                                                            style: TextStyle(
-                                                                color: Colors
-                                                                    .white),
-                                                            controller:
-                                                                sourceController,
-                                                            decoration:
-                                                                InputDecoration(
-                                                              hintText:
-                                                                  "https://example.com...",
-                                                              hintStyle: TextStyle(
-                                                                  color: Color(
-                                                                      0xFF909090)),
-                                                              filled: true,
-                                                              fillColor: Color(
-                                                                  0xFF393535),
-                                                              enabledBorder:
-                                                                  OutlineInputBorder(
-                                                                borderSide: BorderSide(
-                                                                    color: Color(
-                                                                        0xFF565656)),
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            12.0),
-                                                              ),
-                                                              focusedBorder:
-                                                                  OutlineInputBorder(
-                                                                borderSide: BorderSide(
-                                                                    color: Color(
-                                                                        0xFF565656)),
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            12.0),
-                                                              ),
-                                                              errorBorder:
-                                                                  OutlineInputBorder(
-                                                                borderSide:
-                                                                    BorderSide(
-                                                                        color: Colors
-                                                                            .red),
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            12.0),
-                                                              ),
-                                                              focusedErrorBorder:
-                                                                  OutlineInputBorder(
-                                                                borderSide:
-                                                                    BorderSide(
-                                                                        color: Colors
-                                                                            .red),
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            12.0),
-                                                              ),
-                                                            ),
-                                                            validator:
-                                                                sourceValidator,
-                                                          ),
-                                                        ),
-                                                        SizedBox(
-                                                            width:
-                                                                AppSizes.width *
-                                                                    0.03),
-                                                        Container(
+                                                      SizedBox(
                                                           height:
                                                               AppSizes.height *
-                                                                  0.06,
-                                                          width:
+                                                                  0.02),
+                                                      Text(
+                                                        'Введите заголовок:',
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize:
                                                               AppSizes.width *
-                                                                  0.2,
-                                                          decoration:
-                                                              BoxDecoration(
+                                                                  0.04,
+                                                        ),
+                                                      ),
+                                                      SizedBox(
+                                                          height:
+                                                              AppSizes.height *
+                                                                  0.01),
+                                                      TextFormField(
+                                                        style: TextStyle(
+                                                            color:
+                                                                Colors.white),
+                                                        controller:
+                                                            headingController,
+                                                        decoration:
+                                                            InputDecoration(
+                                                          hintText:
+                                                              "Ввести текст...",
+                                                          hintStyle: TextStyle(
+                                                              color: Color(
+                                                                  0xFF909090)),
+                                                          filled: true,
+                                                              fillColor: Color(0xFF1E1E1E),
+                                                          enabledBorder:
+                                                              OutlineInputBorder(
+                                                            borderSide: BorderSide(
+                                                                color: Color(
+                                                                    0xFF565656)),
                                                             borderRadius:
                                                                 BorderRadius
                                                                     .circular(
                                                                         12.0),
-                                                            color: Color(
-                                                                0xFF292626),
                                                           ),
-                                                          child: TextButton(
-                                                            onPressed: () async {
-                                                              if (_formKey.currentState!.validate()) {
-                                                                try {
-                                                                  await DatabaseService().updatePost(
-                                                                    postId: id,
-                                                                    newHeading: headingController.text,
-                                                                    newSource: sourceController.text,
-                                                                    newImage: _selectedImage,
-                                                                  );
+                                                          focusedBorder:
+                                                              OutlineInputBorder(
+                                                            borderSide: BorderSide(
+                                                                color: Color(
+                                                                    0xFF565656)),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        12.0),
+                                                          ),
+                                                          errorBorder:
+                                                              OutlineInputBorder(
+                                                            borderSide:
+                                                                BorderSide(
+                                                                    color: Colors
+                                                                        .red),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        12.0),
+                                                          ),
+                                                          focusedErrorBorder:
+                                                              OutlineInputBorder(
+                                                            borderSide:
+                                                                BorderSide(
+                                                                    color: Colors
+                                                                        .red),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        12.0),
+                                                          ),
+                                                        ),
+                                                        validator:
+                                                            headingValidator,
+                                                        maxLines: 1,
+                                                        keyboardType:
+                                                            TextInputType
+                                                                .multiline,
+                                                      ),
+                                                      SizedBox(
+                                                          height:
+                                                              AppSizes.height *
+                                                                  0.01),
+                                                      Text(
+                                                        'Введите содержание:',
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize:
+                                                              AppSizes.width *
+                                                                  0.04,
+                                                        ),
+                                                      ),
+                                                      SizedBox(
+                                                          height:
+                                                              AppSizes.height *
+                                                                  0.01),
+                                                      TextFormField(
+                                                        style: TextStyle(
+                                                            color:
+                                                                Colors.white),
+                                                        controller:
+                                                            contentController,
+                                                        decoration:
+                                                            InputDecoration(
+                                                          hintText:
+                                                              "Ввести текст...",
+                                                          hintStyle: TextStyle(
+                                                              color: Color(
+                                                                  0xFF909090)),
+                                                          filled: true,
+                                                              fillColor: Color(0xFF1E1E1E),
+                                                          enabledBorder:
+                                                              OutlineInputBorder(
+                                                            borderSide: BorderSide(
+                                                                color: Color(
+                                                                    0xFF565656)),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        12.0),
+                                                          ),
+                                                          focusedBorder:
+                                                              OutlineInputBorder(
+                                                            borderSide: BorderSide(
+                                                                color: Color(
+                                                                    0xFF565656)),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        12.0),
+                                                          ),
+                                                          errorBorder:
+                                                              OutlineInputBorder(
+                                                            borderSide:
+                                                                BorderSide(
+                                                                    color: Colors
+                                                                        .red),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        12.0),
+                                                          ),
+                                                          focusedErrorBorder:
+                                                              OutlineInputBorder(
+                                                            borderSide:
+                                                                BorderSide(
+                                                                    color: Colors
+                                                                        .red),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        12.0),
+                                                          ),
+                                                        ),
+                                                        validator:
+                                                            contentValidator,
+                                                        maxLines: 4,
+                                                        keyboardType:
+                                                            TextInputType
+                                                                .multiline,
+                                                      ),
+                                                      SizedBox(
+                                                          height:
+                                                              AppSizes.height *
+                                                                  0.01),
+                                                      Text(
+                                                        'Источник:',
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize:
+                                                              AppSizes.width *
+                                                                  0.04,
+                                                        ),
+                                                      ),
+                                                      SizedBox(
+                                                          height:
+                                                              AppSizes.height *
+                                                                  0.01),
+                                                      TextFormField(
+                                                        style: TextStyle(
+                                                            color: Colors
+                                                                .white),
+                                                        controller:
+                                                        sourceController,
+                                                        decoration:
+                                                        InputDecoration(
+                                                          hintText:
+                                                          "https://example.com...",
+                                                          hintStyle: TextStyle(
+                                                              color: Color(
+                                                                  0xFF909090)),
+                                                          filled: true,
+                                                          fillColor: Color(0xFF1E1E1E),
+                                                          enabledBorder:
+                                                          OutlineInputBorder(
+                                                            borderSide:
+                                                            BorderSide(
+                                                                color:
+                                                                Color(0xFF565656)),
+                                                            borderRadius:
+                                                            BorderRadius
+                                                                .circular(
+                                                                12.0),
+                                                          ),
+                                                          focusedBorder:
+                                                          OutlineInputBorder(
+                                                            borderSide:
+                                                            BorderSide(
+                                                                color:
+                                                                Color(0xFF565656)),
+                                                            borderRadius:
+                                                            BorderRadius
+                                                                .circular(
+                                                                12.0),
+                                                          ),
+                                                          errorBorder:
+                                                          OutlineInputBorder(
+                                                            borderSide:
+                                                            BorderSide(
+                                                                color:
+                                                                Colors.red),
+                                                            borderRadius:
+                                                            BorderRadius
+                                                                .circular(
+                                                                12.0),
+                                                          ),
+                                                          focusedErrorBorder:
+                                                          OutlineInputBorder(
+                                                            borderSide:
+                                                            BorderSide(
+                                                                color:
+                                                                Colors.red),
+                                                            borderRadius:
+                                                            BorderRadius
+                                                                .circular(
+                                                                12.0),
+                                                          ),
+                                                        ),
+                                                        validator:
+                                                        sourceValidator,
+                                                      ),
+                                                      SizedBox(height: AppSizes.height * 0.015),
+                                                      Row(
+                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                        children: [
+                                                          Container(
+                                                            height: AppSizes
+                                                                    .height *
+                                                                0.06,
+                                                            width:
+                                                                AppSizes.width *
+                                                                    0.2,
+                                                            decoration:
+                                                                BoxDecoration(
+                                                              borderRadius:
+                                                                  BorderRadius
+                                                                      .circular(
+                                                                          12.0),
+                                                              color: Color(
+                                                                  0xFF292626),
+                                                            ),
+                                                            child: TextButton(
+                                                              onPressed:
+                                                                  () async {
+                                                                  try {
+                                                                    await DatabaseService()
+                                                                        .deletePost(id, imageUrl);
+                                                                    Navigator.of(
+                                                                            context)
+                                                                        .pop();
 
-                                                                  // Закрываем диалог
-                                                                  Navigator.of(context).pop();
-
-                                                                  // Обновляем экран
-                                                                  setState(() {
-                                                                    _selectedImage = null;
-                                                                    loadPosts();
-                                                                  });
-                                                                } catch (e) {
-                                                                  print("Ошибка при обновлении поста: $e");
-                                                                }
-                                                              }
-                                                            },
-                                                            child: Center(
-                                                              child: Text(
-                                                                'Сохранить',
-                                                                style:
-                                                                    TextStyle(
-                                                                  color: Color(
-                                                                      0xFF909090),
-                                                                  fontSize:
-                                                                      AppSizes.width *
-                                                                          0.033,
+                                                                    setState(
+                                                                        () {
+                                                                      _selectedImage =
+                                                                          null;
+                                                                      loadPosts();
+                                                                    });
+                                                                  } catch (e) {
+                                                                    print(
+                                                                        "Ошибка удаления поста: $e");
+                                                                  }
+                                                              },
+                                                              child: Center(
+                                                                child: Text(
+                                                                  'Удалить',
+                                                                  style:
+                                                                      TextStyle(
+                                                                    color: Color(
+                                                                        0xFFC22323),
+                                                                    fontSize:
+                                                                        AppSizes.width *
+                                                                            0.033,
+                                                                  ),
                                                                 ),
                                                               ),
                                                             ),
                                                           ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ],
+                                                          Container(
+                                                            height: AppSizes
+                                                                .height *
+                                                                0.06,
+                                                            width:
+                                                            AppSizes.width *
+                                                                0.2,
+                                                            decoration:
+                                                            BoxDecoration(
+                                                              borderRadius:
+                                                              BorderRadius
+                                                                  .circular(
+                                                                  12.0),
+                                                              color: Color(
+                                                                  0xFF292626),
+                                                            ),
+                                                            child: TextButton(
+                                                              onPressed:
+                                                                  () async {
+                                                                if (_formKey
+                                                                    .currentState!
+                                                                    .validate()) {
+                                                                  try {
+                                                                    await DatabaseService()
+                                                                        .updatePost(
+                                                                        postId:
+                                                                        id,
+                                                                        newHeading:
+                                                                        headingController
+                                                                            .text,
+                                                                        newSource:
+                                                                        sourceController
+                                                                            .text,
+                                                                        newImage:
+                                                                        _selectedImage,
+                                                                        newContent: contentController.text
+                                                                    );
+
+                                                                    // Закрываем диалог
+                                                                    Navigator.of(
+                                                                        context)
+                                                                        .pop();
+
+                                                                    // Обновляем экран
+                                                                    setState(
+                                                                            () {
+                                                                          _selectedImage =
+                                                                          null;
+                                                                          loadPosts();
+                                                                        });
+                                                                  } catch (e) {
+                                                                    print(
+                                                                        "Ошибка при обновлении поста: $e");
+                                                                  }
+                                                                }
+                                                              },
+                                                              child: Center(
+                                                                child: Text(
+                                                                  'Сохранить',
+                                                                  style:
+                                                                  TextStyle(
+                                                                    color: Color(
+                                                                        0xFFA3E567),
+                                                                    fontSize:
+                                                                    AppSizes.width *
+                                                                        0.033,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ),
                                               ),
                                             ),
                                           ),
-                                        ),
-                                      );
-                                    }).then((_) {
+                                        );
+                                      }).then((_) {
                                     setState(() {
-                                      _selectedImage = null;// Обнуляем после закрытия диалога
+                                      _selectedImage =
+                                          null; // Обнуляем после закрытия диалога
                                     });
                                   });
                                 },

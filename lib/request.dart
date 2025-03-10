@@ -18,7 +18,8 @@ class RequestCheck {
   static String? humidity;
   static String? time;
   static String iconRequest = "01d";
-  static final String apiKey = "21ac8e81ee16d60dacb39e207c9de134";
+  static final String apiKey = "0f21dc0b-4bc6-46e2-85e0-57fbac370543";
+  static final String apiKeyWeather = "21ac8e81ee16d60dacb39e207c9de134";
   static List<dynamic> forecast = [];
   static List<IconData> iconList = [];
   static List<int> temperatures = [];
@@ -52,9 +53,8 @@ class RequestCheck {
   }
 
   static Future<void> fetchAirQuality() async {
-    final String airQualityApiKey = "0f21dc0b-4bc6-46e2-85e0-57fbac370543";
     final String url =
-        "http://api.airvisual.com/v2/nearest_city?lat=$latitude&lon=$longitude&key=$airQualityApiKey";
+        "http://api.airvisual.com/v2/nearest_city?lat=$latitude&lon=$longitude&key=$apiKey";
 
     var response = await http.get(Uri.parse(url));
 
@@ -67,6 +67,7 @@ class RequestCheck {
       temperature = jsonData['data']['current']['weather']['tp'].toString();
       humidity = jsonData['data']['current']['weather']['hu'].toString();
       iconRequest = jsonData['data']['current']['weather']['ic'].toString();
+      print(jsonData);
 
       DateTime now = DateTime.now();
       time =
@@ -127,7 +128,7 @@ class RequestCheck {
 
   static Future<void> fetchWeatherForecast() async {
     final String url =
-        "https://api.openweathermap.org/data/2.5/forecast?lat=$latitude&lon=$longitude&appid=$apiKey&units=metric";
+        "https://api.openweathermap.org/data/2.5/forecast?lat=$latitude&lon=$longitude&appid=$apiKeyWeather&units=metric";
 
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
@@ -179,5 +180,46 @@ class RequestCheck {
       weatherCount[weather] = (weatherCount[weather] ?? 0) + 1;
     }
     return weatherCount.entries.reduce((a, b) => a.value > b.value ? a : b).key;
+  }
+
+  Future<Map<String, dynamic>> getAQI(double latitude, double longitude) async {
+    final String url = "http://api.airvisual.com/v2/nearest_city?lat=$latitude&lon=$longitude&key=$apiKey";
+
+    var response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      var jsonData = json.decode(response.body);
+      int aqi = jsonData['data']['current']['pollution']['aqius'].toInt();
+
+      String levelText;
+      Color levelColor;
+
+      if (aqi >= 0 && aqi <= 50) {
+        levelText = "Отлично";
+        levelColor = Colors.green;
+      } else if (aqi > 50 && aqi <= 100) {
+        levelText = "Хорошо";
+        levelColor = Colors.yellow;
+      } else if (aqi > 100 && aqi <= 150) {
+        levelText = "Средне";
+        levelColor = Colors.orange;
+      } else if (aqi > 150 && aqi <= 200) {
+        levelText = "Вредно";
+        levelColor = Colors.red;
+      } else if (aqi > 200 && aqi <= 300) {
+        levelText = "Угрожающе";
+        levelColor = Colors.purple;
+      } else {
+        levelText = "Опасно";
+        levelColor = Colors.indigo;
+      }
+
+      return {
+        "aqi": aqi,
+        "color": levelColor,
+        "text": levelText,
+      };
+    } else {
+      throw Exception("Ошибка: ${response.reasonPhrase}");
+    }
   }
 }

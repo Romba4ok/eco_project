@@ -23,22 +23,23 @@ class _StatePageSelectionAdmin extends State<PageSelectionAdmin> {
   final DatabaseService _databaseService = DatabaseService();
 
   final List<Widget Function(Function(int))> _postSubPages = [
-        (togglePage) => AddPostPage(togglePage: togglePage),
-        (togglePage) => EditPostPage(togglePage: togglePage),
+    (togglePage) => AddPostPage(togglePage: togglePage),
+    (togglePage) => EditPostPage(togglePage: togglePage),
   ];
 
   final List<Widget Function(Function(int))> _exampleSubPages = [
-        (togglePage) => AddExamplePage(togglePage: togglePage),
-        (togglePage) => EditExamplePage(togglePage: togglePage),
+    (togglePage) => AddExamplePage(togglePage: togglePage),
+    (togglePage) => EditExamplePage(togglePage: togglePage),
   ];
 
   final List<Widget Function(Function(int))> _pages = [
-        (togglePage) => UsersPage(),
-        (togglePage) => ShopPageAdmin(),
+    (togglePage) => UsersPage(),
+    (togglePage) => ShopPageAdmin(),
   ];
 
   Future<void> _onItemTapped(int index) async {
-    if (index == 5) { // Выход из аккаунта
+    if (index == 4) {
+      // Выход из аккаунта
       await _databaseService.signOut();
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (context) => PageSelection()));
@@ -74,8 +75,8 @@ class _StatePageSelectionAdmin extends State<PageSelectionAdmin> {
             child: _selectedIndex == 0
                 ? _exampleSubPages[_exampleSubIndex](_onExampleSubPageTapped)
                 : (_selectedIndex == 1
-                ? _postSubPages[_postSubIndex](_onPostSubPageTapped)
-                : _pages[_selectedIndex - 2](_onItemTapped)),
+                    ? _postSubPages[_postSubIndex](_onPostSubPageTapped)
+                    : _pages[_selectedIndex - 2](_onItemTapped)),
           ),
         ],
       ),
@@ -90,15 +91,24 @@ class _StatePageSelectionAdmin extends State<PageSelectionAdmin> {
         border: Border(right: BorderSide(color: Color(0xFF2A2A2A), width: 2.0)),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.max, // 🔹 Указываем, что Column должен занять максимум
         children: [
           SizedBox(height: AppSizes.height * 0.07),
           Image.asset('assets/images/union.png'),
-          SizedBox(height: AppSizes.height * 0.14),
-          _buildDrawerItem(Icons.expand, 0, _selectedIndex == 0),
-          _buildDrawerItem(Icons.edit, 1, _selectedIndex == 1),
-          _buildDrawerItem(Icons.people, 3, _selectedIndex == 3),
-          _buildDrawerItem(Icons.shopping_bag, 4, _selectedIndex == 4),
-          _buildDrawerItem(Icons.logout, 5, false),
+          SizedBox(height: AppSizes.height * 0.07), // Уменьши отступ
+          Expanded( // 🔹 Растягиваем всё меню
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center, // 🔹 Центрируем
+              children: [
+                _buildDrawerItem(Icons.expand, 0, _selectedIndex == 0),
+                _buildDrawerItem(Icons.edit, 1, _selectedIndex == 1),
+                _buildDrawerItem(Icons.people, 2, _selectedIndex == 2),
+                _buildDrawerItem(Icons.shopping_bag, 3, _selectedIndex == 3),
+              ],
+            ),
+          ),
+          _buildDrawerItem(Icons.logout, 4, false), // 🔹 Logout всегда внизу
+          SizedBox(height: AppSizes.height * 0.07),
         ],
       ),
     );

@@ -3,6 +3,7 @@ import 'package:Eco/currency_info.dart';
 import 'package:Eco/pageSelection.dart';
 import 'package:Eco/shop.dart';
 import 'package:Eco/supabase_config.dart';
+import 'package:Eco/top.dart';
 import 'package:Eco/training_shop1.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -51,8 +52,7 @@ class _BalancePageState extends State<BalancePage> {
     bool hasSeenOnboarding = prefs.getBool('seen_onboarding') ?? false;
 
     if (!hasSeenOnboarding) {
-      await prefs.setBool(
-          'seen_onboarding', true);
+      await prefs.setBool('seen_onboarding', true);
       Route route = MaterialPageRoute(builder: (context) => TrainingShop1());
       Navigator.pushReplacement(context, route);
     } else {
@@ -115,7 +115,7 @@ class _BalancePageState extends State<BalancePage> {
                               ),
                               SizedBox(width: AppSizes.width * 0.03),
                               Text(
-                               '${DatabaseService.balance}',
+                                '${DatabaseService.balance}',
                                 style: TextStyle(
                                   fontSize: AppSizes.width * 0.08,
                                   fontWeight: FontWeight.bold,
@@ -362,54 +362,61 @@ class _BalancePageState extends State<BalancePage> {
                         SizedBox(
                           height: AppSizes.height * 0.02,
                         ),
-                        Container(
-                          width: AppSizes.width,
-                          height: AppSizes.height * 0.19,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            // border: Border.all(
-                            //   color: Color(0xFFA7EC6A), // Цвет границы
-                            //   width: 2,
-                            // ),
-                            image: DecorationImage(
-                              image: AssetImage(
-                                  'assets/images/balance_container_background4.png'),
-                              // Путь к изображению
-                              fit: BoxFit
-                                  .cover, // Растянуть изображение на весь контейнер
+                        GestureDetector(
+                          onTap: () {
+                            Route route = MaterialPageRoute(builder: (context) => TopPage());
+                            Navigator.pushReplacement(context, route);
+                          },
+                          child: Container(
+                            width: AppSizes.width,
+                            height: AppSizes.height * 0.19,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              // border: Border.all(
+                              //   color: Color(0xFFA7EC6A), // Цвет границы
+                              //   width: 2,
+                              // ),
+                              image: DecorationImage(
+                                image: AssetImage(
+                                    'assets/images/balance_container_background4.png'),
+                                // Путь к изображению
+                                fit: BoxFit
+                                    .cover, // Растянуть изображение на весь контейнер
+                              ),
                             ),
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                              left: AppSizes.width * 0.05,
-                              right: AppSizes.width * 0.05,
-                              top: AppSizes.width * 0.05,
-                              bottom: AppSizes.width * 0.085,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Список лучших за \nДекабрь',
-                                  style: TextStyle(
-                                    color: Color(0xFF004B08),
-                                    fontSize: AppSizes.width * 0.06,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                  textAlign: TextAlign.start,
-                                ),
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: Text(
-                                    'Топ 100',
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                left: AppSizes.width * 0.05,
+                                right: AppSizes.width * 0.05,
+                                top: AppSizes.width * 0.05,
+                                bottom: AppSizes.width * 0.085,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Список лучших за \nДекабрь',
                                     style: TextStyle(
-                                      color: Color(0xFF148305),
-                                      fontSize: AppSizes.width * 0.035,
+                                      color: Color(0xFF004B08),
+                                      fontSize: AppSizes.width * 0.06,
+                                      fontWeight: FontWeight.bold,
                                     ),
+                                    textAlign: TextAlign.start,
                                   ),
-                                )
-                              ],
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      'Топ 100',
+                                      style: TextStyle(
+                                        color: Color(0xFF148305),
+                                        fontSize: AppSizes.width * 0.035,
+                                      ),
+                                    ),
+                                  )
+                                ],
+                              ),
                             ),
                           ),
                         ),

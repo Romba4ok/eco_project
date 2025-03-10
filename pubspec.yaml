@@ -41,6 +41,10 @@ dependencies:
   shared_preferences:
   flutter_launcher_icons:
   flutter_native_splash:
+  flutter_map:
+  latlong2:
+  flutter_local_notifications:
+  flutter_cache_manager:
 
 
 flutter_native_splash:
@@ -86,6 +90,7 @@ flutter:
      - assets/images/container3_info.png
      - assets/images/union.png
      - assets/images/union_white.png
+     - assets/images/union_grey.png
      - assets/images/balance_container_background.png
      - assets/images/balance_container_background2.png
      - assets/images/balance_container_background3.png
@@ -110,6 +115,14 @@ flutter:
      - assets/images/container_training_examples1.png
      - assets/images/container_training_examples2.png
      - assets/images/container_training_examples3.png
+     - assets/images/container_training_examples3.png
+     - assets/app/notificationLogo.png
+     - assets/images/top_background.png
+     - assets/images/dotted_container.png
+     - assets/images/number_one.png
+     - assets/images/number_two.png
+     - assets/images/number_three.png
+     - assets/images/ads.png
   #   - images/a_dot_ham.jpeg
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

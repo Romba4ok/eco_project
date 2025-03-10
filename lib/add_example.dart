@@ -61,7 +61,7 @@ class _AddExamplePageState extends State<AddExamplePage> {
         sourceController.text.isNotEmpty) {
       // Вызываем метод сервиса для сохранения поста
       await _databaseService.savePost(
-          _selectedImage!, headingController.text, sourceController.text);
+          _selectedImage!, headingController.text, sourceController.text, "");
     } else {
       // Показываем сообщение, если что-то не заполнено
       print('Пожалуйста, заполните все поля и выберите изображение.');
@@ -178,6 +178,119 @@ class _AddExamplePageState extends State<AddExamplePage> {
                                   ),
                                   softWrap:
                                       true, // Включаем softWrap для переноса текста
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: AppSizes.height * 0.03),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      height: AppSizes.height * 0.14,
+                      width: AppSizes.width * 0.3,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20.0),
+                        border: Border.all(
+                          color: Color(0xFF68E30B), // Цвет границы
+                          width: 2, // Толщина границы
+                        ),
+                        color: Color(0xFF393535),
+                      ),
+                      child: TextButton(
+                        onPressed: () {},
+                        style: TextButton.styleFrom(
+                          alignment: Alignment.topLeft,
+                          // Поднимаем содержимое вверх и влево
+                          padding: EdgeInsets
+                              .zero, // Убираем внутренние отступы, если нужно
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.all(AppSizes.width * 0.02),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.add,
+                                color: Color(0xFFA3E567),
+                              ),
+                              SizedBox(
+                                width: AppSizes.width * 0.01,
+                              ),
+                              Row(children: [
+                                Container(
+                                  width: AppSizes.width * 0.04,
+                                  height: AppSizes.width * 0.05,
+                                  decoration: BoxDecoration(
+                                    image: DecorationImage(
+                                      image: AssetImage(
+                                          'assets/images/ads.png'),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
+                                 Text(
+                                    'Добавить пост',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: AppSizes.width * 0.045,
+                                    ),
+                                    softWrap:
+                                    true, // Включаем softWrap для переноса текста
+                                  ),
+                              ],),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      height: AppSizes.height * 0.14,
+                      width: AppSizes.width * 0.3,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20.0),
+                        color: Color(0xFF393535),
+                      ),
+                      child: TextButton(
+                        onPressed: () {
+                          setState(() {
+                            debugPrint('1');
+                            widget.togglePage(1);
+                          });
+                        },
+                        style: TextButton.styleFrom(
+                          alignment: Alignment.topLeft,
+                          // Поднимаем содержимое вверх и влево
+                          padding: EdgeInsets
+                              .zero, // Убираем внутренние отступы, если нужно
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.all(AppSizes.width * 0.02),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.edit,
+                                color: Color(0xFF676DE5),
+                              ),
+                              SizedBox(
+                                width: AppSizes.width * 0.01,
+                              ),
+                              Expanded(
+                                // Используем Expanded, чтобы текст занял оставшееся пространство
+                                child: Text(
+                                  'Редактировать пост',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: AppSizes.width * 0.043,
+                                  ),
+                                  softWrap:
+                                  true, // Включаем softWrap для переноса текста
                                 ),
                               ),
                             ],

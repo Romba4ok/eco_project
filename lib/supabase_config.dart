@@ -143,6 +143,7 @@ class DatabaseService {
             'image': e['image'] as String? ?? '',
             'title': e['heading'] as String? ?? '',
             'source': e['source'] as String? ?? '',
+            'content': e['content'] as String? ?? '',
           };
         }).toList();
       } else {
@@ -157,7 +158,9 @@ class DatabaseService {
 
   Future<Map<String, String>?> fetchUser(String userId) async {
     try {
-      final response = await _supabase.from('users').select().eq('id', userId).single();
+      final response = await _supabase.from('users').select()
+          .eq('id', userId)
+          .single();
 
       if (response != null) {
         userRole = response['user'];
@@ -178,7 +181,7 @@ class DatabaseService {
           'city': response['city'] as String? ?? '',
           'avatar': response['avatar'] as String? ?? '',
           'user': response['user'] as String? ?? '',
-          'balance': response['balance'] != null ? response['balance'].toString() : '0', // int -> String
+          'balance': response['balance'] != null ? response['balance'].toString() : '0',
         };
       } else {
         print('Ошибка: Пользователь не найден');
@@ -190,7 +193,8 @@ class DatabaseService {
     }
   }
 
-  Future<void> savePost(File image, String heading, String source) async {
+  Future<void> savePost(File image, String heading, String source,
+      String content) async {
     try {
       // Шаг 1: Загрузка изображения в Supabase Storage
       final fileName =
@@ -212,6 +216,7 @@ class DatabaseService {
         'image': imageUrl,
         'heading': heading,
         'source': source,
+        'content': content,
       });
 
       // Сообщение об успешном добавлении
@@ -227,10 +232,12 @@ class DatabaseService {
     String? newHeading,
     String? newSource,
     File? newImage,
+    String? newContent,
   }) async {
     try {
       // Проверяем существование поста
-      final postData = await _supabase.from('posts').select('image').eq('id', postId).single();
+      final postData = await _supabase.from('posts').select('image').eq(
+          'id', postId).single();
       if (postData == null) {
         print('Ошибка: Пост не найден.');
         return;
@@ -240,8 +247,12 @@ class DatabaseService {
       Map<String, dynamic> updatedData = {};
 
       // Обновление заголовка и источника
-      if (newHeading != null && newHeading.isNotEmpty) updatedData['heading'] = newHeading;
-      if (newSource != null && newSource.isNotEmpty) updatedData['source'] = newSource;
+      if (newHeading != null && newHeading.isNotEmpty)
+        updatedData['heading'] = newHeading;
+      if (newSource != null && newSource.isNotEmpty)
+        updatedData['source'] = newSource;
+      if (newContent != null && newContent.isNotEmpty)
+        updatedData['content'] = newContent;
 
       // Работа с изображением
       if (newImage != null) {
@@ -250,22 +261,27 @@ class DatabaseService {
           print('Изображение не изменилось, обновление не требуется.');
         } else {
           // Загружаем новое изображение перед удалением старого
-          final newFileName = 'post_images/${DateTime.now().millisecondsSinceEpoch}.png';
-          final uploadResponse = await _supabase.storage.from('posts').upload(newFileName, newImage);
+          final newFileName = 'post_images/${DateTime
+              .now()
+              .millisecondsSinceEpoch}.png';
+          final uploadResponse = await _supabase.storage.from('posts').upload(
+              newFileName, newImage);
 
           if (uploadResponse.isEmpty) {
             throw Exception('Ошибка при загрузке нового изображения.');
           }
 
           // Получаем новый URL изображения
-          final newImageUrl = _supabase.storage.from('posts').getPublicUrl(newFileName);
+          final newImageUrl = _supabase.storage.from('posts').getPublicUrl(
+              newFileName);
           updatedData['image'] = newImageUrl;
 
           // Удаление старого изображения
           if (currentImageUrl != null && currentImageUrl.isNotEmpty) {
             try {
               final filePath = _getStoragePath(currentImageUrl);
-              final deleteResponse = await _supabase.storage.from('posts').remove([filePath]);
+              final deleteResponse = await _supabase.storage.from('posts')
+                  .remove([filePath]);
 
               if (deleteResponse.isNotEmpty) {
                 print('Старое изображение успешно удалено.');
@@ -326,7 +342,8 @@ class DatabaseService {
       // Обновление пароля в Auth
       if (password != null && password.isNotEmpty) {
         await _supabase.auth.updateUser(UserAttributes(password: password));
-        await _supabase.from('users').update({'password': password}).eq('id', userId);
+        await _supabase.from('users').update({'password': password}).eq(
+            'id', userId);
         print('Пароль успешно обновлен.');
       }
       print('Пароль успешно обновлен в базе данных.');
@@ -363,12 +380,14 @@ class DatabaseService {
         if (currentAvatar != null && currentAvatar.isNotEmpty) {
           try {
             final uri = Uri.parse(currentAvatar);
-            final filePath = uri.path.replaceFirst('/storage/v1/object/public/avatars/', '');
+            final filePath = uri.path.replaceFirst(
+                '/storage/v1/object/public/avatars/', '');
 
 
             print('Удаление старой аватарки: $filePath');
 
-            final deleteResponse = await _supabase.storage.from('avatars').remove([filePath]);
+            final deleteResponse = await _supabase.storage.from('avatars')
+                .remove([filePath]);
 
             if (deleteResponse.isNotEmpty) {
               print('Старая аватарка успешно удалена.');
@@ -388,6 +407,17 @@ class DatabaseService {
       }
     } catch (e) {
       print('Ошибка при обновлении пользователя: $e');
+    }
+  }
+
+  Future<void> deletePost(int postId, String imageUrl) async {
+    try {
+      // Шаг 1: Получаем путь к файлу в Supabase Storage
+      final String filePath = _getStoragePath(imageUrl);
+      await _supabase.storage.from('posts').remove([filePath]);
+      await _supabase.from('posts').delete().eq('id', postId);
+    } catch (error) {
+      print('Ошибка при удалении поста: $error');
     }
   }
 

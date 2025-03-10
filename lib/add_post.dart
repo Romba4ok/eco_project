@@ -41,6 +41,13 @@ class _AddPostPageState extends State<AddPostPage> {
     return null;
   }
 
+  String? contentValidator(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Введите заголовок';
+    }
+    return null;
+  }
+
   String? sourceValidator(String? value) {
     if (value == null || value.isEmpty) {
       return 'Введите источник';
@@ -50,15 +57,16 @@ class _AddPostPageState extends State<AddPostPage> {
 
   final TextEditingController headingController = TextEditingController();
   final TextEditingController sourceController = TextEditingController();
+  final TextEditingController contentController = TextEditingController();
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   final DatabaseService _databaseService = DatabaseService();
 
   Future<void> _savePost() async {
-    if (_selectedImage != null && headingController.text.isNotEmpty && sourceController.text.isNotEmpty) {
+    if (_selectedImage != null && headingController.text.isNotEmpty && sourceController.text.isNotEmpty && contentController.text.isNotEmpty) {
       // Вызываем метод сервиса для сохранения поста
-      await _databaseService.savePost(_selectedImage!, headingController.text, sourceController.text);
+      await _databaseService.savePost(_selectedImage!, headingController.text, sourceController.text, contentController.text);
     } else {
       // Показываем сообщение, если что-то не заполнено
       print('Пожалуйста, заполните все поля и выберите изображение.');
@@ -216,7 +224,10 @@ class _AddPostPageState extends State<AddPostPage> {
                   width: AppSizes.width,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20.0),
-                    color: Color(0xFF393535),
+                    border: Border.all(
+                      width: 2,
+                      color: Color(0xFF393535),
+                    ),
                   ),
                   child: Form(
                     key: _formKey,
@@ -235,7 +246,7 @@ class _AddPostPageState extends State<AddPostPage> {
                               return null;
                             },
                           ),
-                          SizedBox(height: AppSizes.height * 0.02),
+                          SizedBox(height: AppSizes.height * 0.01),
                           Text(
                             'Введите заголовок:',
                             style: TextStyle(
@@ -251,7 +262,7 @@ class _AddPostPageState extends State<AddPostPage> {
                               hintText: "Ввести текст...",
                               hintStyle: TextStyle(color: Color(0xFF909090)),
                               filled: true,
-                              fillColor: Color(0xFF393535),
+                              fillColor: Color(0xFF1E1E1E),
                               enabledBorder: OutlineInputBorder(
                                 borderSide:
                                     BorderSide(color: Color(0xFF565656)),
@@ -272,10 +283,50 @@ class _AddPostPageState extends State<AddPostPage> {
                               ),
                             ),
                             validator: headingValidator,
-                            maxLines: 6,
+                            maxLines: 1,
                             keyboardType: TextInputType.multiline,
                           ),
-                          SizedBox(height: AppSizes.height * 0.02),
+                          SizedBox(height: AppSizes.height * 0.01),
+                          Text(
+                            'Введите содержание:',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: AppSizes.width * 0.04,
+                            ),
+                          ),
+                          SizedBox(height: AppSizes.height * 0.01),
+                          TextFormField(
+                            style: TextStyle(color: Colors.white),
+                            controller: contentController,
+                            decoration: InputDecoration(
+                              hintText: "Ввести текст...",
+                              hintStyle: TextStyle(color: Color(0xFF909090)),
+                              filled: true,
+                                fillColor: Color(0xFF1E1E1E),
+                              enabledBorder: OutlineInputBorder(
+                                borderSide:
+                                BorderSide(color: Color(0xFF565656)),
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide:
+                                BorderSide(color: Color(0xFF565656)),
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                              errorBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.red),
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                              focusedErrorBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.red),
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                            ),
+                            validator: contentValidator,
+                            maxLines: 4,
+                            keyboardType: TextInputType.multiline,
+                          ),
+                          SizedBox(height: AppSizes.height * 0.01),
                           Text(
                             'Источник:',
                             style: TextStyle(
@@ -295,7 +346,7 @@ class _AddPostPageState extends State<AddPostPage> {
                                     hintStyle:
                                         TextStyle(color: Color(0xFF909090)),
                                     filled: true,
-                                    fillColor: Color(0xFF393535),
+                                    fillColor: Color(0xFF1E1E1E),
                                     enabledBorder: OutlineInputBorder(
                                       borderSide:
                                           BorderSide(color: Color(0xFF565656)),
@@ -327,9 +378,10 @@ class _AddPostPageState extends State<AddPostPage> {
                                   color: Color(0xFF292626),
                                 ),
                                 child: TextButton(
-                                  onPressed: () {
+                                  onPressed: () async {
                                     if (_formKey.currentState!.validate()) {
-                                      _savePost();
+                                      await _savePost();
+                                      widget.togglePage(1);
                                     }
                                   },
                                   child: Center(
