@@ -1,23 +1,21 @@
 import 'dart:io';
-
-import 'package:Eco/add_post.dart';
 import 'package:Eco/appSizes.dart';
 import 'package:Eco/supabase_config.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-class EditExamplePage extends StatefulWidget {
+class EditSponsorPage extends StatefulWidget {
   final Function(int) togglePage;
 
-  EditExamplePage({required this.togglePage});
+  EditSponsorPage({required this.togglePage});
 
   @override
   State<StatefulWidget> createState() {
-    return _EditExamplePageState();
+    return _EditSponsorPageState();
   }
 }
 
-class _EditExamplePageState extends State<EditExamplePage> {
+class _EditSponsorPageState extends State<EditSponsorPage> {
   bool _isExpanded = true;
   bool isLoading = true;
   String? imageUrl;
@@ -27,7 +25,7 @@ class _EditExamplePageState extends State<EditExamplePage> {
 
   Future<void> loadPosts() async {
     List<Map<String, String>> fetchedPosts =
-    await _databaseService.fetchPosts();
+        await _databaseService.fetchPosts();
     if (mounted) {
       setState(() {
         posts = fetchedPosts;
@@ -83,7 +81,6 @@ class _EditExamplePageState extends State<EditExamplePage> {
   final TextEditingController sourceController = TextEditingController();
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
 
   @override
   Widget build(BuildContext context) {
@@ -146,17 +143,17 @@ class _EditExamplePageState extends State<EditExamplePage> {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () {},
+                      onTap: () {
+                        setState(() {
+                          widget.togglePage(1);
+                        });
+                      },
                       child: Container(
                         height: AppSizes.height * 0.14,
                         width: AppSizes.width * 0.33,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(20.0),
                           color: Color(0xFF393535),
-                          border: Border.all(
-                            color: Color(0xFF68E30B), // Цвет границы
-                            width: 2, // Толщина границы
-                          ),
                         ),
                         child: Padding(
                           padding: EdgeInsets.all(AppSizes.width * 0.02),
@@ -201,7 +198,6 @@ class _EditExamplePageState extends State<EditExamplePage> {
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(20.0),
                           color: Color(0xFF393535),
-
                         ),
                         child: Padding(
                           padding: EdgeInsets.all(AppSizes.width * 0.02),
@@ -216,7 +212,7 @@ class _EditExamplePageState extends State<EditExamplePage> {
                                     decoration: BoxDecoration(
                                       image: DecorationImage(
                                         image:
-                                        AssetImage('assets/images/ads.png'),
+                                            AssetImage('assets/images/ads.png'),
                                         fit: BoxFit.cover,
                                       ),
                                     ),
@@ -242,17 +238,17 @@ class _EditExamplePageState extends State<EditExamplePage> {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          widget.togglePage(3);
-                        });
-                      },
+                      onTap: () {},
                       child: Container(
                         height: AppSizes.height * 0.1,
                         width: AppSizes.width * 0.33,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(20.0),
                           color: Color(0xFF393535),
+                          border: Border.all(
+                            color: Color(0xFFDCE06B), // Цвет границы
+                            width: 2, // Толщина границы
+                          ),
                         ),
                         child: Padding(
                           padding: EdgeInsets.all(AppSizes.width * 0.02),
@@ -267,7 +263,7 @@ class _EditExamplePageState extends State<EditExamplePage> {
                                     decoration: BoxDecoration(
                                       image: DecorationImage(
                                         image:
-                                        AssetImage('assets/images/ads.png'),
+                                            AssetImage('assets/images/ads.png'),
                                         fit: BoxFit.cover,
                                       ),
                                     ),
@@ -299,21 +295,27 @@ class _EditExamplePageState extends State<EditExamplePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.edit,
-                          color: Color(0xFF676DE5),
+                        Container(
+                          width: AppSizes.width * 0.09,
+                          height: AppSizes.width * 0.09,
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                              image: AssetImage('assets/images/ads.png'),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
                         ),
-                        SizedBox(
-                          width: AppSizes.width * 0.01,
-                        ),
+                        SizedBox(width: 8),
+                        // Добавляем небольшой отступ
                         Text(
-                          'Редактировать задание',
+                          'SPONSOR',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: AppSizes.width * 0.05,
                           ),
+                          softWrap: true,
                         ),
                       ],
                     ),
@@ -332,12 +334,12 @@ class _EditExamplePageState extends State<EditExamplePage> {
                   curve: Curves.easeInOut,
                   child: isLoading
                       ? SizedBox(
-                    height: AppSizes.height * 0.8,
-                    child: Center(child: CircularProgressIndicator()),
-                  )
+                          height: AppSizes.height * 0.8,
+                          child: Center(child: CircularProgressIndicator()),
+                        )
                       : Container(
-                    height: AppSizes.height * 0.6, // Высота GridView
-                  ),
+                          height: AppSizes.height * 0.6, // Высота GridView
+                        ),
                 ),
               ],
             ),

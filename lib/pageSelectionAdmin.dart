@@ -1,8 +1,10 @@
 import 'package:Eco/add_example.dart';
 import 'package:Eco/add_post.dart';
+import 'package:Eco/add_sponsor.dart';
 import 'package:Eco/appSizes.dart';
 import 'package:Eco/edit_post.dart';
 import 'package:Eco/edit_example.dart';
+import 'package:Eco/edit_sponsor.dart';
 import 'package:Eco/pageSelection.dart';
 import 'package:Eco/shop_admin.dart';
 import 'package:Eco/supabase_config.dart';
@@ -30,6 +32,8 @@ class _StatePageSelectionAdmin extends State<PageSelectionAdmin> {
   final List<Widget Function(Function(int))> _exampleSubPages = [
     (togglePage) => AddExamplePage(togglePage: togglePage),
     (togglePage) => EditExamplePage(togglePage: togglePage),
+    (togglePage) => AddSponsorPage(togglePage: togglePage),
+    (togglePage) => EditSponsorPage(togglePage: togglePage),
   ];
 
   final List<Widget Function(Function(int))> _pages = [
@@ -68,6 +72,7 @@ class _StatePageSelectionAdmin extends State<PageSelectionAdmin> {
   Widget build(BuildContext context) {
     AppSizes.init(context);
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Row(
         children: [
           _buildSidebar(),

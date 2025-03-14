@@ -118,24 +118,16 @@ class _EditPostPageState extends State<EditPostPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      height: AppSizes.height * 0.14,
-                      width: AppSizes.width * 0.3,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20.0),
-                        color: Color(0xFF393535),
-                      ),
-                      child: TextButton(
-                        onPressed: () {
-                          setState(() {
-                            widget.togglePage(0);
-                          });
-                        },
-                        style: TextButton.styleFrom(
-                          alignment: Alignment.topLeft,
-                          // Поднимаем содержимое вверх и влево
-                          padding: EdgeInsets
-                              .zero, // Убираем внутренние отступы, если нужно
+                    GestureDetector(
+                      onTap: () {
+                        widget.togglePage(0);
+                      },
+                      child: Container(
+                        height: AppSizes.height * 0.14,
+                        width: AppSizes.width * 0.33,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20.0),
+                          color: Color(0xFF393535),
                         ),
                         child: Padding(
                           padding: EdgeInsets.all(AppSizes.width * 0.02),
@@ -150,15 +142,13 @@ class _EditPostPageState extends State<EditPostPage> {
                                 width: AppSizes.width * 0.01,
                               ),
                               Expanded(
-                                // Используем Expanded, чтобы текст занял оставшееся пространство
                                 child: Text(
                                   'Добавить пост',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: AppSizes.width * 0.045,
                                   ),
-                                  softWrap:
-                                      true, // Включаем softWrap для переноса текста
+                                  softWrap: true,
                                 ),
                               ),
                             ],
@@ -166,24 +156,22 @@ class _EditPostPageState extends State<EditPostPage> {
                         ),
                       ),
                     ),
-                    Container(
-                      height: AppSizes.height * 0.14,
-                      width: AppSizes.width * 0.3,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20.0),
-                        color: Color(0xFF393535),
-                        border: Border.all(
-                          color: Color(0xFF68E30B), // Цвет границы
-                          width: 2, // Толщина границы
-                        ),
-                      ),
-                      child: TextButton(
-                        onPressed: () {},
-                        style: TextButton.styleFrom(
-                          alignment: Alignment.topLeft,
-                          // Поднимаем содержимое вверх и влево
-                          padding: EdgeInsets
-                              .zero, // Убираем внутренние отступы, если нужно
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          debugPrint('1');
+                        });
+                      },
+                      child: Container(
+                        height: AppSizes.height * 0.14,
+                        width: AppSizes.width * 0.33,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20.0),
+                          color: Color(0xFF393535),
+                          border: Border.all(
+                            color: Color(0xFF68E30B), // Цвет границы
+                            width: 2, // Толщина границы
+                          ),
                         ),
                         child: Padding(
                           padding: EdgeInsets.all(AppSizes.width * 0.02),
@@ -198,15 +186,13 @@ class _EditPostPageState extends State<EditPostPage> {
                                 width: AppSizes.width * 0.01,
                               ),
                               Expanded(
-                                // Используем Expanded, чтобы текст занял оставшееся пространство
                                 child: Text(
                                   'Редактировать пост',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: AppSizes.width * 0.043,
                                   ),
-                                  softWrap:
-                                      true, // Включаем softWrap для переноса текста
+                                  softWrap: true,
                                 ),
                               ),
                             ],

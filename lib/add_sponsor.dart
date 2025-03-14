@@ -5,69 +5,18 @@ import 'package:Eco/supabase_config.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
-class AddExamplePage extends StatefulWidget {
+class AddSponsorPage extends StatefulWidget {
   final Function(int) togglePage;
 
-  AddExamplePage({required this.togglePage});
+  AddSponsorPage({required this.togglePage});
 
   @override
   State<StatefulWidget> createState() {
-    return _AddExamplePageState();
+    return _AddSponsorPageState();
   }
 }
 
-class _AddExamplePageState extends State<AddExamplePage> {
-  File? _selectedImage; // Хранит выбранное изображение
-
-  Future<void> _pickImage(FormFieldState<File?> fieldState) async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.gallery, // Можно заменить на ImageSource.camera
-    );
-
-    if (pickedFile != null) {
-      setState(() {
-        _selectedImage =
-            File(pickedFile.path); // Сохраняем выбранное изображение
-      });
-      fieldState.didChange(_selectedImage); // Уведомляем форму об изменении
-    }
-  }
-
-  String? headingValidator(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Введите заголовок';
-    }
-    return null;
-  }
-
-  String? sourceValidator(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Введите источник';
-    }
-    return null;
-  }
-
-  final TextEditingController headingController = TextEditingController();
-  final TextEditingController sourceController = TextEditingController();
-
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  final DatabaseService _databaseService = DatabaseService();
-
-  Future<void> _savePost() async {
-    if (_selectedImage != null &&
-        headingController.text.isNotEmpty &&
-        sourceController.text.isNotEmpty) {
-      // Вызываем метод сервиса для сохранения поста
-      await _databaseService.savePost(
-          _selectedImage!, headingController.text, sourceController.text, "");
-    } else {
-      // Показываем сообщение, если что-то не заполнено
-      print('Пожалуйста, заполните все поля и выберите изображение.');
-    }
-  }
-
+class _AddSponsorPageState extends State<AddSponsorPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -89,16 +38,14 @@ class _AddExamplePageState extends State<AddExamplePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     GestureDetector(
-                      onTap: () {},
+                      onTap: () {
+                        widget.togglePage(0);
+                      },
                       child: Container(
                         height: AppSizes.height * 0.14,
                         width: AppSizes.width * 0.33,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(20.0),
-                          border: Border.all(
-                            color: Color(0xFF68E30B), // Цвет границы
-                            width: 2, // Толщина границы
-                          ),
                           color: Color(0xFF393535),
                         ),
                         child: Padding(
@@ -175,15 +122,17 @@ class _AddExamplePageState extends State<AddExamplePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     GestureDetector(
-                      onTap: () {
-                          widget.togglePage(2);
-                      },
+                      onTap: () {},
                       child: Container(
                         height: AppSizes.height * 0.1,
                         width: AppSizes.width * 0.33,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(20.0),
                           color: Color(0xFF393535),
+                          border: Border.all(
+                            color: Color(0xFFDCE06B), // Цвет границы
+                            width: 2, // Толщина границы
+                          ),
                         ),
                         child: Padding(
                           padding: EdgeInsets.all(AppSizes.width * 0.02),
@@ -278,151 +227,224 @@ class _AddExamplePageState extends State<AddExamplePage> {
                 ),
                 SizedBox(height: AppSizes.height * 0.03),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.start,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.add,
-                          color: Color(0xFFA3E567),
+                    Container(
+                      width: AppSizes.width * 0.09,
+                      height: AppSizes.width * 0.09,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage('assets/images/ads.png'),
+                          fit: BoxFit.cover,
                         ),
-                        SizedBox(
-                          width: AppSizes.width * 0.01,
-                        ),
-                        Text(
-                          'Добавить задания',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: AppSizes.width * 0.05,
-                          ),
-                          softWrap:
-                              true, // Включаем softWrap для переноса текста
-                        ),
-                      ],
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    // Добавляем небольшой отступ
+                    Text(
+                      'SPONSOR',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: AppSizes.width * 0.05,
+                      ),
+                      softWrap: true,
                     ),
                   ],
                 ),
                 SizedBox(height: AppSizes.height * 0.01),
                 Container(
-                  width: 300, // Ширина контейнера
-                  padding: EdgeInsets.all(16),
+                  width: AppSizes.width, // Ширина контейнера
+                  padding: EdgeInsets.all(AppSizes.width * 0.04),
                   decoration: BoxDecoration(
-                    color: Color(0xFF1E1E1E), // Тёмный фон
-                    borderRadius:
-                        BorderRadius.circular(20.0), // Закруглённые углы
+                    borderRadius: BorderRadius.circular(20.0),
+                    border: Border.all(
+                      width: 2,
+                      color: Color(0xFF393535),
+                    ),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Заголовок и кнопка закрытия
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Заголовок",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                      Center(
+                        child: Text(
+                          "Заголовок",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: AppSizes.width * 0.05,
+                            fontWeight: FontWeight.bold,
                           ),
-                          Icon(Icons.close, color: Colors.white),
-                        ],
+                        ),
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: AppSizes.height * 0.01),
                       // Поле ввода заголовка
                       TextField(
                         decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Color(0xFF2A2A2A),
                           hintText: "Ввести заголовок задания...",
-                          hintStyle: TextStyle(color: Colors.grey),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                            borderSide: BorderSide.none,
+                          hintStyle: TextStyle(color: Color(0xFF909090)),
+                          filled: true,
+                          fillColor: Color(0xFF1E1E1E),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF565656)),
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF565656)),
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.red),
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.red),
+                            borderRadius: BorderRadius.circular(12.0),
                           ),
                         ),
                         style: TextStyle(color: Colors.white),
                       ),
-                      SizedBox(height: 16),
-                      // Подзаголовок
-                      Text(
-                        "Краткое описание и награда",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
+                      SizedBox(height: AppSizes.height * 0.02),
+                      Center(
+                        child: Text(
+                          "Краткое описание и награда",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: AppSizes.width * 0.04,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: AppSizes.height * 0.01),
                       // Поле ввода описания
                       TextField(
                         decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Color(0xFF2A2A2A),
                           hintText: "Введите краткое описание...",
-                          hintStyle: TextStyle(color: Colors.grey),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                            borderSide: BorderSide.none,
+                          hintStyle: TextStyle(color: Color(0xFF909090)),
+                          filled: true,
+                          fillColor: Color(0xFF1E1E1E),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF565656)),
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF565656)),
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.red),
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.red),
+                            borderRadius: BorderRadius.circular(12.0),
                           ),
                         ),
                         style: TextStyle(color: Colors.white),
                       ),
-                      SizedBox(height: 16),
-                      // Переключатель и награда
+                      SizedBox(height: AppSizes.height * 0.02),
                       Row(
                         children: [
+                          // Метка "Спонсор:"
                           Text(
-                            "Особое \nзадание",
-                            style: TextStyle(color: Colors.white),
+                            "Спонсор:",
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: AppSizes.width * 0.04),
                           ),
-                          Spacer(),
-                          Switch(
-                            value: false,
-                            onChanged: (bool value) {},
-                            activeColor: Color(0xFF68E30B),
+                          SizedBox(width: AppSizes.width * 0.01),
+
+                          // Поле ввода для спонсора
+                          Expanded(
+                            child: TextFormField(
+                              style: TextStyle(color: Colors.white),
+                              decoration: InputDecoration(
+                                filled: true,
+                                fillColor: Color(0xFF1E1E1E),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: Color(0xFF565656)),
+                                  borderRadius: BorderRadius.circular(12.0),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: Color(0xFF565656)),
+                                  borderRadius: BorderRadius.circular(12.0),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.red),
+                                  borderRadius: BorderRadius.circular(12.0),
+                                ),
+                                focusedErrorBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.red),
+                                  borderRadius: BorderRadius.circular(12.0),
+                                ),
+                              ),
+                            ),
                           ),
-                          SizedBox(width: 8),
+                          SizedBox(width: AppSizes.width * 0.01),
+
+                          // Метка "Награда:"
                           Text(
                             "Награда:",
-                            style: TextStyle(color: Colors.white),
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: AppSizes.width * 0.04),
                           ),
-                          SizedBox(width: 8),
-                          Container(
-                            width: 70,
-                            height: 30,
-                            decoration: BoxDecoration(
-                              color: Color(0xFF2A2A2A),
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
-                            child: Center(
-                              child: Text(
-                                "ecooin...",
-                                style: TextStyle(color: Colors.white),
+                          SizedBox(width: AppSizes.width * 0.01),
+                          // Поле награды (неизменяемый контейнер)
+                          Expanded(
+                            child: TextFormField(
+                              style: TextStyle(color: Colors.white),
+                              decoration: InputDecoration(
+                                hintText: "ecocoin...",
+                                hintStyle: TextStyle(color: Color(0xFF909090)),
+                                filled: true,
+                                fillColor: Color(0xFF1E1E1E),
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: Color(0xFF565656)),
+                                  borderRadius: BorderRadius.circular(12.0),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide:
+                                      BorderSide(color: Color(0xFF565656)),
+                                  borderRadius: BorderRadius.circular(12.0),
+                                ),
+                                errorBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.red),
+                                  borderRadius: BorderRadius.circular(12.0),
+                                ),
+                                focusedErrorBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.red),
+                                  borderRadius: BorderRadius.circular(12.0),
+                                ),
                               ),
                             ),
                           ),
                         ],
                       ),
-                      SizedBox(height: 16),
+                      SizedBox(height: AppSizes.height * 0.015),
                       // Кнопка "Сохранить"
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: null, // Отключенная кнопка
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF2A2A2A),
-                            disabledBackgroundColor: Color(0xFF2A2A2A),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                            ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Container(
+                          height: AppSizes.height * 0.06,
+                          width: AppSizes.width * 0.2,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12.0),
+                            color: Color(0xFF292626),
                           ),
-                          child: Text(
-                            "Сохранить",
-                            style: TextStyle(color: Colors.grey),
+                          child: TextButton(
+                            onPressed: () async {},
+                            child: Center(
+                              child: Text(
+                                'Сохранить',
+                                style: TextStyle(
+                                  color: Color(0xFFA3E567),
+                                  fontSize: AppSizes.width * 0.033,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ),

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:Eco/pageSelectionAdmin.dart';
+import 'package:Eco/titles.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -22,6 +23,7 @@ class DatabaseService {
   static String? userAvatar;
   static String? userPassword;
   static String? userRole;
+  static String? userRank;
   static int? balance;
 
   Future<void> signOut() async {
@@ -48,7 +50,7 @@ class DatabaseService {
 
         final response = await _supabase
             .from('users')
-            .select('user, name, email, state, city, avatar, balance')
+            .select('user, name, email, state, city, avatar, balance, rank_user')
             .eq('id', user.id)
             .single();
         print(response);
@@ -61,6 +63,7 @@ class DatabaseService {
           userPassword = response['password'];
           userAvatar = response['avatar'];
           balance = response['balance'];
+          userRank = response['rank_user'];
           print(response['balance']);
           print("User role: $userRole");
 
@@ -113,6 +116,7 @@ class DatabaseService {
           'city': city,
           'avatar': '',
           'user': 'user',
+          'rank_user': '',
         });
         userRole = 'user';
         userName = name;
@@ -121,6 +125,7 @@ class DatabaseService {
         userState = city;
         userPassword = password;
         userAvatar = '';
+        userRank = '';
 
         togglePage(2); // Переход на страницу пользователя после регистрации
       }
@@ -171,6 +176,7 @@ class DatabaseService {
         userPassword = response['password'];
         userAvatar = response['avatar'];
         balance = response['balance']; // balance остается int
+        userRank = response['rank_user']; // balance остается int
 
         return {
           'name': response['name'] as String? ?? '',
@@ -181,6 +187,7 @@ class DatabaseService {
           'city': response['city'] as String? ?? '',
           'avatar': response['avatar'] as String? ?? '',
           'user': response['user'] as String? ?? '',
+          'rank_user': response['rank_user'] as String? ?? '',
           'balance': response['balance'] != null ? response['balance'].toString() : '0',
         };
       } else {
@@ -419,6 +426,74 @@ class DatabaseService {
     } catch (error) {
       print('Ошибка при удалении поста: $error');
     }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchLeaderboard() async {
+    print("🔍 Отправляем запрос в Supabase...");
+
+    final supabase = Supabase.instance.client;
+
+    final response = await supabase
+        .from('users')
+        .select('id, avatar, name, balance, rank_user')
+        .order('balance', ascending: false);
+
+    print("📩 Ответ из Supabase: $response");
+
+    if (response.isEmpty) {
+      print("⚠️ Ошибка: Supabase вернул пустой массив!");
+      return [];
+    }
+
+    return response.asMap().entries.map((entry) {
+      final index = entry.key;
+      final user = entry.value;
+
+      final int rank = index + 1;
+      final int balance = _parseBalance(user['balance']); // Конвертируем balance
+      final int? highestRank = getHighestRank(user['rank_user']); // Получаем титул
+
+      // Проверка, есть ли титул
+      Map<String, dynamic>? badge =
+      (highestRank != null && highestRank >= 0 && highestRank < Titles.titles.length)
+          ? Titles.titles[highestRank]
+          : null;
+
+      return {
+        'rank': rank,
+        'name': user['name'] ?? 'Аноним',
+        'balance': balance,
+        'avatar': user['avatar'] ?? '',
+        'badge': badge?['name'],
+        'badgeColor': badge?['color'],
+        'badgeTextColor': badge?['colorText'],
+      };
+    }).toList();
+  }
+
+
+
+// Функция выбирает титул с наибольшим индексом
+  int? getHighestRank(dynamic ranks) {
+    if (ranks == null || ranks.toString().isEmpty) return null;
+
+    List<int> rankList = ranks
+        .toString()
+        .split(',')
+        .map((e) => int.tryParse(e.trim()) ?? -1) // Преобразуем в int, ошибки заменяем на -1
+        .where((e) => e >= 0) // Оставляем только корректные значения
+        .toList();
+
+    if (rankList.isEmpty) return null;
+
+    return rankList.reduce((a, b) => a > b ? a : b); // Находим максимальный индекс
+  }
+
+  int _parseBalance(dynamic balance) {
+    if (balance == null) return 0;
+    if (balance is int) return balance;
+    if (balance is String) return int.tryParse(balance) ?? 0;
+    return 0;
   }
 
 }
