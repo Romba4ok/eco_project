@@ -298,29 +298,27 @@ class RequestCheck {
           bool isDaytime = hour >= 6 && hour < 18;
 
           double temp = (entry["main"]["temp"] as num?)?.toDouble() ?? 0.0;
+          int humidity = entry["main"]["humidity"] as int? ?? 0;
           String icon = entry["weather"][0]["icon"]?.toString() ?? "01d";
 
           // Инициализация дня если его еще нет
           if (!dailyData.containsKey(date)) {
             dailyData[date] = {
               "dayOfWeek": getWeekday(date),
-              "allTemps": [],       // Все температуры за день
-              "dayTemps": [],       // Только дневные температуры (6-18)
-              "nightTemps": [],     // Только ночные температуры (18-6)
-              "dayIcons": [],       // Иконки днем
-              "nightIcons": [],      // Иконки ночью
+              "tempValues": [],
+              "humidityValues": [],
+              "dayIcons": [],
+              "nightIcons": [],
             };
           }
 
-          // Добавляем температуру в общий список
-          dailyData[date]!["allTemps"].add(temp);
+          // Добавляем данные
+          dailyData[date]!["tempValues"].add(temp);
+          dailyData[date]!["humidityValues"].add(humidity);
 
-          // Разделяем данные по времени суток
           if (isDaytime) {
-            dailyData[date]!["dayTemps"].add(temp);
             dailyData[date]!["dayIcons"].add(icon);
           } else {
-            dailyData[date]!["nightTemps"].add(temp);
             dailyData[date]!["nightIcons"].add(icon);
           }
         } catch (e) {
@@ -332,27 +330,19 @@ class RequestCheck {
       List<Map<String, dynamic>> processedForecast = [];
 
       dailyData.forEach((date, data) {
-        List<double> allTemps = List<double>.from(data["allTemps"]);
-        List<double> dayTemps = List<double>.from(data["dayTemps"]);
-        List<double> nightTemps = List<double>.from(data["nightTemps"]);
+        List<double> temps = List<double>.from(data["tempValues"]);
+        List<int> humidities = List<int>.from(data["humidityValues"]);
         List<String> dayIcons = List<String>.from(data["dayIcons"]);
         List<String> nightIcons = List<String>.from(data["nightIcons"]);
-
-        // Максимальная температура за весь день
-        double maxDayTemp = allTemps.isNotEmpty ? allTemps.reduce((a, b) => a > b ? a : b) : 0;
-
-        // Минимальная температура за всю ночь
-        double minNightTemp = nightTemps.isNotEmpty ? nightTemps.reduce((a, b) => a < b ? a : b) : 0;
 
         processedForecast.add({
           "date": date,
           "dayOfWeek": data["dayOfWeek"],
-          "maxTemp": maxDayTemp.round(),       // Максимальная за день
-          "minTemp": minNightTemp.round(),     // Минимальная за ночь
-          "dayIcon": _getMostFrequentIcon(dayIcons),    // Самая частая дневная иконка
-          "nightIcon": _getMostFrequentIcon(nightIcons),// Самая частая ночная иконка
-          "avgDayTemp": dayTemps.isNotEmpty ? (dayTemps.reduce((a, b) => a + b) / dayTemps.length).round() : 0,
-          "avgNightTemp": nightTemps.isNotEmpty ? (nightTemps.reduce((a, b) => a + b) / nightTemps.length).round() : 0,
+          "maxTemp": temps.reduce((a, b) => a > b ? a : b).round(),
+          "minTemp": temps.reduce((a, b) => a < b ? a : b).round(),
+          "avgHumidity": (humidities.reduce((a, b) => a + b) / humidities.length).round(),
+          "dayIcon": _getMostFrequentIcon(dayIcons),
+          "nightIcon": _getMostFrequentIcon(nightIcons),
         });
       });
 
@@ -365,12 +355,11 @@ class RequestCheck {
       RequestCheck.forecastWeather.forEach((day) {
         print(
             "${day["dayOfWeek"]}: "
-                "Макс днем: ${day["maxTemp"]}°C, "
-                "Мин ночью: ${day["minTemp"]}°C, "
-                "Ср.день: ${day["avgDayTemp"]}°C, "
-                "Ср.ночь: ${day["avgNightTemp"]}°C, "
-                "Иконка дня: ${day["dayIcon"]}, "
-                "Иконка ночи: ${day["nightIcon"]}"
+                "Макс ${day["maxTemp"]}°C, "
+                "Мин ${day["minTemp"]}°C, "
+                "Влажность ${day["avgHumidity"]}%, "
+                "День: ${day["dayIcon"]}, "
+                "Ночь: ${day["nightIcon"]}"
         );
       });
 
