@@ -1,6 +1,7 @@
 import 'package:Eco/appSizes.dart';
 import 'package:Eco/permission.dart';
 import 'package:Eco/request.dart';
+import 'package:Eco/weather.dart';
 import 'package:flutter/material.dart';
 import "package:percent_indicator/percent_indicator.dart";
 
@@ -398,138 +399,145 @@ class _PageInfoState extends State<PageInfo> {
                     SizedBox(
                       height: AppSizes.height * 0.01,
                     ),
-                    Container(
-                      width: AppSizes.width * 0.9,
-                      height: AppSizes.height * 0.23,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20.0),
-                        color: Color(0xFF627EF9),
-                      ),
-                      child: Padding(
-                        padding: EdgeInsets.all(AppSizes.width * 0.05),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.location_on,
-                                  size: AppSizes.width * 0.05,
-                                  color: Colors.white,
-                                ),
-                                Text(
-                                  "$state",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: AppSizes.width * 0.05,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(
-                                      RequestCheck.iconList[0],
-                                      color: Colors.white,
-                                      size: AppSizes.width * 0.1,
-                                    ),
-                                    SizedBox(
-                                      width: AppSizes.width * 0.02,
-                                    ),
-                                    Text(
-                                      "${RequestCheck.temperatures[0]}",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: AppSizes.width * 0.1,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                SizedBox(
-                                  width: AppSizes.width * 0.02,
-                                ),
-                                Column(
-                                  children: [
-                                    Icon(
-                                      RequestCheck.iconList[1],
-                                      color: Colors.white,
-                                      size: AppSizes.width * 0.07,
-                                    ),
-                                    Text(days[0],
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: AppSizes.width * 0.05,
-                                        )),
-                                  ],
-                                ),
-                                Column(
-                                  children: [
-                                    Icon(
-                                      RequestCheck.iconList[2],
-                                      color: Colors.white,
-                                      size: AppSizes.width * 0.07,
-                                    ),
-                                    Text(
-                                      days[1],
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: AppSizes.width * 0.05,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                Column(
-                                  children: [
-                                    Icon(
-                                      RequestCheck.iconList[3],
-                                      color: Colors.white,
-                                      size: AppSizes.width * 0.07,
-                                    ),
-                                    Text(
-                                      days[2],
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: AppSizes.width * 0.05,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  "$time",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: AppSizes.width * 0.05,
-                                  ),
-                                ),
-                                IconButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      isLoading = true;
-                                      handlePermissionCheck();
-                                    });
-                                  },
-                                  icon: Icon(
-                                    Icons.restart_alt,
+                    GestureDetector(
+                      onTap: () {
+                        Route route = MaterialPageRoute(builder: (context) => WeatherPage());
+                        Navigator.pushReplacement(context, route);
+                      },
+                      child: Container(
+                        width: AppSizes.width * 0.9,
+                        height: AppSizes.height * 0.23,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20.0),
+                          color: Color(0xFF627EF9),
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.all(AppSizes.width * 0.05),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.location_on,
                                     size: AppSizes.width * 0.05,
                                     color: Colors.white,
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
+                                  Text(
+                                    "$state",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: AppSizes.width * 0.05,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        RequestCheck.iconList[0],
+                                        color: Colors.white,
+                                        size: AppSizes.width * 0.1,
+                                      ),
+                                      SizedBox(
+                                        width: AppSizes.width * 0.02,
+                                      ),
+                                      Text(
+                                        "${RequestCheck.temperatures[0]}",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: AppSizes.width * 0.1,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(
+                                    width: AppSizes.width * 0.02,
+                                  ),
+                                  Column(
+                                    children: [
+                                      Icon(
+                                        RequestCheck.iconList[1],
+                                        color: Colors.white,
+                                        size: AppSizes.width * 0.07,
+                                      ),
+                                      Text(days[0],
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: AppSizes.width * 0.05,
+                                          )),
+                                    ],
+                                  ),
+                                  Column(
+                                    children: [
+                                      Icon(
+                                        RequestCheck.iconList[2],
+                                        color: Colors.white,
+                                        size: AppSizes.width * 0.07,
+                                      ),
+                                      Text(
+                                        days[1],
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: AppSizes.width * 0.05,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    children: [
+                                      Icon(
+                                        RequestCheck.iconList[3],
+                                        color: Colors.white,
+                                        size: AppSizes.width * 0.07,
+                                      ),
+                                      Text(
+                                        days[2],
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: AppSizes.width * 0.05,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "$time",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: AppSizes.width * 0.05,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    onPressed: () {
+                                      setState(() {
+                                        isLoading = true;
+                                        handlePermissionCheck();
+                                      });
+                                    },
+                                    icon: Icon(
+                                      Icons.restart_alt,
+                                      size: AppSizes.width * 0.05,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),

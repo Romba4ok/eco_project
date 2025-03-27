@@ -84,13 +84,13 @@ class _TopPageState extends State<TopPage> {
               children: [
                 SingleChildScrollView(
                   child:
-                      // Фон на всю ширину и высоту экрана
+
                       Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
                       image: DecorationImage(
                         image: AssetImage('assets/images/top_background.png'),
-                        fit: BoxFit.contain,
+                        fit: users.length > 15 ? BoxFit.contain : BoxFit.fill, // Условие
                         alignment: Alignment.topCenter,
                       ),
                     ),
@@ -166,57 +166,57 @@ class _TopPageState extends State<TopPage> {
                                               SizedBox(
                                                 height: AppSizes.height * 0.001,
                                               ),
-                                              users[0]["badge"] != null
-                                                  ? Container(
-                                                      width:
-                                                          AppSizes.width * 0.25,
-                                                      height:
-                                                          AppSizes.width * 0.08,
-                                                      padding:
-                                                          EdgeInsets.symmetric(
-                                                              horizontal: 8,
-                                                              vertical: 4),
-                                                      decoration: BoxDecoration(
-                                                        color: users[0]
-                                                            ["badgeColor"],
-                                                        // Цвет фона титула
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(8),
-                                                      ),
-                                                      child: Center(
-                                                        child: Text(
-                                                          users[0]["badge"],
-                                                          style: TextStyle(
-                                                              color: users[0][
-                                                                  "badgeTextColor"]),
-                                                        ),
-                                                      ),
-                                                    )
-                                                  : Container(
-                                                      width:
-                                                          AppSizes.width * 0.25,
-                                                      height:
-                                                          AppSizes.width * 0.08,
-                                                      alignment:
-                                                          Alignment.center,
-                                                      decoration: BoxDecoration(
-                                                        color:
-                                                            Colors.transparent,
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10),
-                                                        border: Border.all(
-                                                            color: Colors
-                                                                .grey), // 🔹 Граница, если ранга нет
-                                                      ),
-                                                      child: Text(
-                                                        "Без титула",
-                                                        style: TextStyle(
-                                                            color: Colors.grey,
-                                                            fontSize: 12),
-                                                      ),
-                                                    ),
+                                        users[0]["badge"] != null
+                                            ? Container(
+                                          width: AppSizes.width * 0.25,
+                                          height: AppSizes.width * 0.1,
+                                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            gradient: users[0]["badgeGradient"] ??
+                                                LinearGradient(
+                                                  colors: [Colors.grey, Colors.grey[300]!],
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                ),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Center(
+                                            child: ShaderMask(
+                                              shaderCallback: (bounds) {
+                                                return (users[0]["badgeTextGradient"] as LinearGradient?)?.createShader(bounds) ??
+                                                    LinearGradient(
+                                                      colors: [Colors.white, Colors.grey[300]!],
+                                                      begin: Alignment.topLeft,
+                                                      end: Alignment.bottomRight,
+                                                    ).createShader(bounds);
+                                              },
+                                              child: Text(
+                                                textAlign: TextAlign.center,
+                                                users[0]["badge"] ?? "Без титула", // Если ранга нет, пишем "Без титула"
+                                                style: TextStyle(
+                                                  fontSize: AppSizes.width * 0.03,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white, // Цвет обязательно нужен для ShaderMask
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                            : Container(
+                                          width: AppSizes.width * 0.25,
+                                          height: AppSizes.width * 0.08,
+                                          alignment: Alignment.center,
+                                          decoration: BoxDecoration(
+                                            color: Colors.transparent,
+                                            borderRadius: BorderRadius.circular(10),
+                                            border: Border.all(color: Colors.grey), // 🔹 Граница, если ранга нет
+                                          ),
+                                          child: Text(
+                                            textAlign: TextAlign.center,
+                                            "Без титула",
+                                            style: TextStyle(color: Colors.grey, fontSize: 12),
+                                          ),
+                                        ),
                                             ],
                                           ),
                                         ),
@@ -280,67 +280,57 @@ class _TopPageState extends State<TopPage> {
                                                       ),
                                                     ],
                                                   ),
-                                                  users[2]["badge"] != null
-                                                      ? Container(
-                                                          width:
-                                                              AppSizes.width *
-                                                                  0.19,
-                                                          height:
-                                                              AppSizes.width *
-                                                                  0.07,
-                                                          padding: EdgeInsets
-                                                              .symmetric(
-                                                                  horizontal: 8,
-                                                                  vertical: 4),
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: users[2]
-                                                                ["badgeColor"],
-                                                            // Цвет фона титула
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        8),
-                                                          ),
-                                                          child: Center(
-                                                            child: Text(
-                                                              users[2]["badge"],
-                                                              style: TextStyle(
-                                                                  color: users[
-                                                                          2][
-                                                                      "badgeTextColor"]),
-                                                            ),
-                                                          ),
-                                                        )
-                                                      : Container(
-                                                          width:
-                                                              AppSizes.width *
-                                                                  0.19,
-                                                          height:
-                                                              AppSizes.width *
-                                                                  0.07,
-                                                          alignment:
-                                                              Alignment.center,
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: Colors
-                                                                .transparent,
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        10),
-                                                            border: Border.all(
-                                                                color: Colors
-                                                                    .grey), // 🔹 Граница, если ранга нет
-                                                          ),
-                                                          child: Text(
-                                                            "Без титула",
-                                                            style: TextStyle(
-                                                                color:
-                                                                    Colors.grey,
-                                                                fontSize: 12),
-                                                          ),
-                                                        ),
+                                          users[2]["badge"] != null
+                                              ? Container(
+                                            width: AppSizes.width * 0.25,
+                                            height: AppSizes.width * 0.07,
+                                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              gradient: users[2]["badgeGradient"] ??
+                                                  LinearGradient(
+                                                    colors: [Colors.grey, Colors.grey[300]!],
+                                                    begin: Alignment.topLeft,
+                                                    end: Alignment.bottomRight,
+                                                  ),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Center(
+                                              child: ShaderMask(
+                                                shaderCallback: (bounds) {
+                                                  return (users[2]["badgeTextGradient"] as LinearGradient?)?.createShader(bounds) ??
+                                                      LinearGradient(
+                                                        colors: [Colors.white, Colors.grey[300]!],
+                                                        begin: Alignment.topLeft,
+                                                        end: Alignment.bottomRight,
+                                                      ).createShader(bounds);
+                                                },
+                                                child: Text(
+                                                  textAlign: TextAlign.center,
+                                                  users[2]["badge"] ?? "Без титула", // Если ранга нет, пишем "Без титула"
+                                                  style: TextStyle(
+                                                    fontSize: AppSizes.width * 0.02,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.white, // Цвет обязательно нужен для ShaderMask
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                              : Container(
+                                            width: AppSizes.width * 0.25,
+                                            height: AppSizes.width * 0.07,
+                                            alignment: Alignment.center,
+                                            decoration: BoxDecoration(
+                                              color: Colors.transparent,
+                                              borderRadius: BorderRadius.circular(10),
+                                              border: Border.all(color: Colors.grey), // 🔹 Граница, если ранга нет
+                                            ),
+                                            child: Text(
+                                              textAlign: TextAlign.center,
+                                              "Без титула",
+                                              style: TextStyle(color: Colors.grey, fontSize: 12),
+                                            ),
+                                          ),
                                                 ],
                                               ),
                                             ],
@@ -401,57 +391,57 @@ class _TopPageState extends State<TopPage> {
                                                   ),
                                                 ],
                                               ),
-                                              users[1]["badge"] != null
-                                                  ? Container(
-                                                      width:
-                                                          AppSizes.width * 0.25,
-                                                      height:
-                                                          AppSizes.width * 0.08,
-                                                      padding:
-                                                          EdgeInsets.symmetric(
-                                                              horizontal: 8,
-                                                              vertical: 4),
-                                                      decoration: BoxDecoration(
-                                                        color: users[1]
-                                                            ["badgeColor"],
-                                                        // Цвет фона титула
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(8),
-                                                      ),
-                                                      child: Center(
-                                                        child: Text(
-                                                          users[1]["badge"],
-                                                          style: TextStyle(
-                                                              color: users[1][
-                                                                  "badgeTextColor"]),
-                                                        ),
-                                                      ),
-                                                    )
-                                                  : Container(
-                                                      width:
-                                                          AppSizes.width * 0.25,
-                                                      height:
-                                                          AppSizes.width * 0.08,
-                                                      alignment:
-                                                          Alignment.center,
-                                                      decoration: BoxDecoration(
-                                                        color:
-                                                            Colors.transparent,
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10),
-                                                        border: Border.all(
-                                                            color: Colors
-                                                                .grey), // 🔹 Граница, если ранга нет
-                                                      ),
-                                                      child: Text(
-                                                        "Без титула",
-                                                        style: TextStyle(
-                                                            color: Colors.grey,
-                                                            fontSize: 12),
-                                                      ),
-                                                    ),
+                                        users[1]["badge"] != null
+                                            ? Container(
+                                          width: AppSizes.width * 0.25,
+                                          height: AppSizes.width * 0.08,
+                                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            gradient: users[1]["badgeGradient"] ??
+                                                LinearGradient(
+                                                  colors: [Colors.grey, Colors.grey[300]!],
+                                                  begin: Alignment.topLeft,
+                                                  end: Alignment.bottomRight,
+                                                ),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Center(
+                                            child: ShaderMask(
+                                              shaderCallback: (bounds) {
+                                                return (users[1]["badgeTextGradient"] as LinearGradient?)?.createShader(bounds) ??
+                                                    LinearGradient(
+                                                      colors: [Colors.white, Colors.grey[300]!],
+                                                      begin: Alignment.topLeft,
+                                                      end: Alignment.bottomRight,
+                                                    ).createShader(bounds);
+                                              },
+                                              child: Text(
+                                                textAlign: TextAlign.center,
+                                                users[1]["badge"] ?? "Без титула", // Если ранга нет, пишем "Без титула"
+                                                style: TextStyle(
+                                                  fontSize: AppSizes.width * 0.025,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white, // Цвет обязательно нужен для ShaderMask
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                            : Container(
+                                          width: AppSizes.width * 0.25,
+                                          height: AppSizes.width * 0.08,
+                                          alignment: Alignment.center,
+                                          decoration: BoxDecoration(
+                                            color: Colors.transparent,
+                                            borderRadius: BorderRadius.circular(10),
+                                            border: Border.all(color: Colors.grey), // 🔹 Граница, если ранга нет
+                                          ),
+                                          child: Text(
+                                            textAlign: TextAlign.center,
+                                            "Без титула",
+                                            style: TextStyle(color: Colors.grey, fontSize: 12),
+                                          ),
+                                        ),
                                             ],
                                           ),
                                         ),
@@ -735,7 +725,7 @@ class _TopPageState extends State<TopPage> {
                                               width: AppSizes.width * 0.005),
                                           Text(
                                             formatScore(
-                                                users[index]['balance']),
+                                                user['balance']),
                                             // ПРАВИЛЬНО
                                             style: TextStyle(
                                                 color: Colors.grey,
@@ -747,40 +737,55 @@ class _TopPageState extends State<TopPage> {
                                       // Правая часть: Бейдж (если есть) или пустой контейнер-заглушка
                                       user["badge"] != null
                                           ? Container(
-                                              padding: EdgeInsets.symmetric(
-                                                  horizontal: 8, vertical: 4),
-                                              decoration: BoxDecoration(
-                                                color: user["badgeColor"],
-                                                // Цвет фона титула
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
+                                        width: AppSizes.width * 0.19,
+                                        height: AppSizes.height * 0.04,
+                                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          gradient: user["badgeGradient"] ??
+                                              LinearGradient(
+                                                colors: [Colors.grey, Colors.grey[300]!],
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
                                               ),
-                                              child: Text(
-                                                user["badge"],
-                                                style: TextStyle(
-                                                    color:
-                                                        user["badgeTextColor"]),
-                                              ),
-                                            )
-                                          : Container(
-                                              width: AppSizes.width * 0.19,
-                                              height: AppSizes.height * 0.04,
-                                              alignment: Alignment.center,
-                                              decoration: BoxDecoration(
-                                                color: Colors.transparent,
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
-                                                border: Border.all(
-                                                    color: Colors
-                                                        .grey), // 🔹 Граница, если ранга нет
-                                              ),
-                                              child: Text(
-                                                "Без титула",
-                                                style: TextStyle(
-                                                    color: Colors.grey,
-                                                    fontSize: 12),
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Center(
+                                          child: ShaderMask(
+                                            shaderCallback: (bounds) {
+                                              return (user["badgeTextGradient"] as LinearGradient?)?.createShader(bounds) ??
+                                                  LinearGradient(
+                                                    colors: [Colors.white, Colors.grey[300]!],
+                                                    begin: Alignment.topLeft,
+                                                    end: Alignment.bottomRight,
+                                                  ).createShader(bounds);
+                                            },
+                                            child: Text(
+                                              textAlign: TextAlign.center,
+                                              user["badge"] ?? "Без титула", // Если ранга нет, пишем "Без титула"
+                                              style: TextStyle(
+                                                fontSize: AppSizes.width * 0.03,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white, // Цвет обязательно нужен для ShaderMask
                                               ),
                                             ),
+                                          ),
+                                        ),
+                                      )
+                                          : Container(
+                                        width: AppSizes.width * 0.19,
+                                        height: AppSizes.height * 0.04,
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
+                                          color: Colors.transparent,
+                                          borderRadius: BorderRadius.circular(10),
+                                          border: Border.all(color: Colors.grey), // 🔹 Граница, если ранга нет
+                                        ),
+                                        child: Text(
+                                          textAlign: TextAlign.center,
+                                          "Без титула",
+                                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 );

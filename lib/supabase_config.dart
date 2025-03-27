@@ -24,7 +24,9 @@ class DatabaseService {
   static String? userPassword;
   static String? userRole;
   static String? userRank;
+  static String? selectRank;
   static int? balance;
+  static int? userPosition;
 
   Future<void> signOut() async {
     await _supabase.auth.signOut();
@@ -50,7 +52,7 @@ class DatabaseService {
 
         final response = await _supabase
             .from('users')
-            .select('user, name, email, state, city, avatar, balance, rank_user')
+            .select('user, name, email, state, city, avatar, balance, rank_user, select_rank')
             .eq('id', user.id)
             .single();
         print(response);
@@ -64,6 +66,7 @@ class DatabaseService {
           userAvatar = response['avatar'];
           balance = response['balance'];
           userRank = response['rank_user'];
+          selectRank = response['select_rank'];
           print(response['balance']);
           print("User role: $userRole");
 
@@ -163,6 +166,27 @@ class DatabaseService {
 
   Future<Map<String, String>?> fetchUser(String userId) async {
     try {
+      // Получаем всех пользователей, отсортированных по балансу (по убыванию)
+      final usersResponse = await _supabase
+          .from('users')
+          .select('id, name, email, password, state, city, avatar, user, rank_user, balance')
+          .order('balance', ascending: false);
+
+      if (usersResponse.isEmpty) {
+        print('Ошибка: База данных пустая');
+        return null;
+      }
+
+      // Поиск позиции пользователя в топе
+      int? position;
+      for (int i = 0; i < usersResponse.length; i++) {
+        if (usersResponse[i]['id'] == userId) {
+          position = i + 1; // Позиция в топе (с 1)
+          break;
+        }
+      }
+
+      // Получаем данные конкретного пользователя
       final response = await _supabase.from('users').select()
           .eq('id', userId)
           .single();
@@ -176,7 +200,9 @@ class DatabaseService {
         userPassword = response['password'];
         userAvatar = response['avatar'];
         balance = response['balance']; // balance остается int
-        userRank = response['rank_user']; // balance остается int
+        userRank = response['rank_user'];
+        selectRank = response['select_rank'];
+        userPosition = position;// rank остается int
 
         return {
           'name': response['name'] as String? ?? '',
@@ -188,7 +214,9 @@ class DatabaseService {
           'avatar': response['avatar'] as String? ?? '',
           'user': response['user'] as String? ?? '',
           'rank_user': response['rank_user'] as String? ?? '',
+          'select_rank': response['select_rank'] as String? ?? '',
           'balance': response['balance'] != null ? response['balance'].toString() : '0',
+          'position': position?.toString() ?? '0', // Добавлено: место в топе
         };
       } else {
         print('Ошибка: Пользователь не найден');
@@ -428,6 +456,21 @@ class DatabaseService {
     }
   }
 
+  Map<String, dynamic>? getUserBadge(String? selectRank) {
+    if (selectRank == null || selectRank.isEmpty) return null;
+
+    int? selectedRank = int.tryParse(selectRank);
+
+    if (selectedRank == null || selectedRank < 0 || selectedRank >= Titles.titles.length) {
+      return null;
+    }
+
+    print(selectRank);
+
+    return Titles.titles[selectedRank];
+  }
+
+
   Future<List<Map<String, dynamic>>> fetchLeaderboard() async {
     print("🔍 Отправляем запрос в Supabase...");
 
@@ -435,7 +478,7 @@ class DatabaseService {
 
     final response = await supabase
         .from('users')
-        .select('id, avatar, name, balance, rank_user')
+        .select('id, avatar, name, balance, select_rank') // Используем select_rank
         .order('balance', ascending: false);
 
     print("📩 Ответ из Supabase: $response");
@@ -451,12 +494,12 @@ class DatabaseService {
 
       final int rank = index + 1;
       final int balance = _parseBalance(user['balance']); // Конвертируем balance
-      final int? highestRank = getHighestRank(user['rank_user']); // Получаем титул
+      final int? selectedRank = int.tryParse(user['select_rank']?.toString() ?? '-1'); // Используем select_rank
 
-      // Проверка, есть ли титул
+      // Проверяем, есть ли такой титул в Titles.titles
       Map<String, dynamic>? badge =
-      (highestRank != null && highestRank >= 0 && highestRank < Titles.titles.length)
-          ? Titles.titles[highestRank]
+      (selectedRank != null && selectedRank >= 0 && selectedRank < Titles.titles.length)
+          ? Titles.titles[selectedRank]
           : null;
 
       return {
@@ -465,29 +508,12 @@ class DatabaseService {
         'balance': balance,
         'avatar': user['avatar'] ?? '',
         'badge': badge?['name'],
-        'badgeColor': badge?['color'],
-        'badgeTextColor': badge?['colorText'],
+        'badgeGradient': badge?['color'],  // Исправлено с gradient на color
+        'badgeTextGradient': badge?['colorText'],  // Исправлено с textGradient на colorText
       };
     }).toList();
   }
 
-
-
-// Функция выбирает титул с наибольшим индексом
-  int? getHighestRank(dynamic ranks) {
-    if (ranks == null || ranks.toString().isEmpty) return null;
-
-    List<int> rankList = ranks
-        .toString()
-        .split(',')
-        .map((e) => int.tryParse(e.trim()) ?? -1) // Преобразуем в int, ошибки заменяем на -1
-        .where((e) => e >= 0) // Оставляем только корректные значения
-        .toList();
-
-    if (rankList.isEmpty) return null;
-
-    return rankList.reduce((a, b) => a > b ? a : b); // Находим максимальный индекс
-  }
 
   int _parseBalance(dynamic balance) {
     if (balance == null) return 0;
@@ -496,4 +522,12 @@ class DatabaseService {
     return 0;
   }
 
+  Future<void> updateUserSelectRank(String userId, int selectedRank) async {
+    try {
+      // Обновляем пользователя в БД, заменяя select_rank на новый индекс
+      await _supabase.from('users').update({'select_rank': selectedRank.toString()}).eq('id', userId);
+    } catch (e) {
+      print('Ошибка при обновлении select_rank: $e');
+    }
+  }
 }

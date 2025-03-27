@@ -4,6 +4,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:weather_icons/weather_icons.dart';
+import 'package:intl/intl.dart';
+
 
 class RequestCheck {
   static bool loading = false;
@@ -21,6 +23,7 @@ class RequestCheck {
   static final String apiKey = "0f21dc0b-4bc6-46e2-85e0-57fbac370543";
   static final String apiKeyWeather = "21ac8e81ee16d60dacb39e207c9de134";
   static List<dynamic> forecast = [];
+  static List<dynamic> forecastWeather = [];
   static List<IconData> iconList = [];
   static List<int> temperatures = [];
   static final SupabaseClient _supabase = Supabase.instance.client;
@@ -31,6 +34,7 @@ class RequestCheck {
     await fetchAirQuality();
     await fetchWeatherForecast();
     await updateGeoUser();
+    await fetchFiveDayForecast();
     loading =
         true; // Теперь loading устанавливается в true только после полной загрузки данных
   }
@@ -134,6 +138,7 @@ class RequestCheck {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       forecast = data['list'];
+      print(forecast);
 
       String cityName = data['city']['name'];
       String country = data['city']['country'];
@@ -222,4 +227,191 @@ class RequestCheck {
       throw Exception("Ошибка: ${response.reasonPhrase}");
     }
   }
+
+  static int getMaxDayTemperature() {
+    try {
+      List<double> dayTemps = forecast
+          .where((item) {
+        String hour = item['dt_txt']?.split(' ')?.elementAt(1)?.split(':')?.first ?? '12';
+        int hourInt = int.tryParse(hour) ?? 12;
+        return hourInt >= 6 && hourInt < 18;
+      })
+          .map<double>((item) => (item['main']['temp'] as num?)?.toDouble() ?? 0.0)
+          .toList();
+
+      if (dayTemps.isEmpty) return 0;
+      return dayTemps.reduce((a, b) => a > b ? a : b).round();
+    } catch (e) {
+      print('Ошибка в getMaxDayTemperature: $e');
+      return 0;
+    }
+  }
+
+  static int getMinNightTemperature() {
+    try {
+      List<double> nightTemps = forecast
+          .where((item) {
+        String hour = item['dt_txt']?.split(' ')?.elementAt(1)?.split(':')?.first ?? '0';
+        int hourInt = int.tryParse(hour) ?? 0;
+        return hourInt >= 18 || hourInt < 6;
+      })
+          .map<double>((item) => (item['main']['temp'] as num?)?.toDouble() ?? 0.0)
+          .toList();
+
+      if (nightTemps.isEmpty) return 0;
+      return nightTemps.reduce((a, b) => a < b ? a : b).round();
+    } catch (e) {
+      print('Ошибка в getMinNightTemperature: $e');
+      return 0;
+    }
+  }
+
+  static Future<void> fetchFiveDayForecast() async {
+    final String url =
+        "https://api.openweathermap.org/data/2.5/forecast?lat=$latitude&lon=$longitude&appid=$apiKeyWeather&units=metric";
+
+    try {
+      print("🌍 Запрос прогноза погоды: $url");
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode != 200) {
+        print("❌ Ошибка ${response.statusCode}: ${response.body}");
+        return;
+      }
+
+      final data = jsonDecode(response.body);
+      if (data["list"] == null || data["list"].isEmpty) {
+        print("⚠️ Нет данных прогноза");
+        return;
+      }
+
+      // Словарь для хранения данных по дням
+      Map<String, Map<String, dynamic>> dailyData = {};
+
+      for (var entry in data["list"]) {
+        try {
+          String date = entry["dt_txt"]?.split(" ")?.first ?? "";
+          if (date.isEmpty) continue;
+
+          String time = entry["dt_txt"]?.split(" ")?.elementAt(1) ?? "";
+          int hour = int.tryParse(time.split(":").first) ?? 0;
+          bool isDaytime = hour >= 6 && hour < 18;
+
+          double temp = (entry["main"]["temp"] as num?)?.toDouble() ?? 0.0;
+          String icon = entry["weather"][0]["icon"]?.toString() ?? "01d";
+
+          // Инициализация дня если его еще нет
+          if (!dailyData.containsKey(date)) {
+            dailyData[date] = {
+              "dayOfWeek": getWeekday(date),
+              "allTemps": [],       // Все температуры за день
+              "dayTemps": [],       // Только дневные температуры (6-18)
+              "nightTemps": [],     // Только ночные температуры (18-6)
+              "dayIcons": [],       // Иконки днем
+              "nightIcons": [],      // Иконки ночью
+            };
+          }
+
+          // Добавляем температуру в общий список
+          dailyData[date]!["allTemps"].add(temp);
+
+          // Разделяем данные по времени суток
+          if (isDaytime) {
+            dailyData[date]!["dayTemps"].add(temp);
+            dailyData[date]!["dayIcons"].add(icon);
+          } else {
+            dailyData[date]!["nightTemps"].add(temp);
+            dailyData[date]!["nightIcons"].add(icon);
+          }
+        } catch (e) {
+          print("⚠️ Ошибка обработки записи прогноза: $e");
+        }
+      }
+
+      // Обработка собранных данных
+      List<Map<String, dynamic>> processedForecast = [];
+
+      dailyData.forEach((date, data) {
+        List<double> allTemps = List<double>.from(data["allTemps"]);
+        List<double> dayTemps = List<double>.from(data["dayTemps"]);
+        List<double> nightTemps = List<double>.from(data["nightTemps"]);
+        List<String> dayIcons = List<String>.from(data["dayIcons"]);
+        List<String> nightIcons = List<String>.from(data["nightIcons"]);
+
+        // Максимальная температура за весь день
+        double maxDayTemp = allTemps.isNotEmpty ? allTemps.reduce((a, b) => a > b ? a : b) : 0;
+
+        // Минимальная температура за всю ночь
+        double minNightTemp = nightTemps.isNotEmpty ? nightTemps.reduce((a, b) => a < b ? a : b) : 0;
+
+        processedForecast.add({
+          "date": date,
+          "dayOfWeek": data["dayOfWeek"],
+          "maxTemp": maxDayTemp.round(),       // Максимальная за день
+          "minTemp": minNightTemp.round(),     // Минимальная за ночь
+          "dayIcon": _getMostFrequentIcon(dayIcons),    // Самая частая дневная иконка
+          "nightIcon": _getMostFrequentIcon(nightIcons),// Самая частая ночная иконка
+          "avgDayTemp": dayTemps.isNotEmpty ? (dayTemps.reduce((a, b) => a + b) / dayTemps.length).round() : 0,
+          "avgNightTemp": nightTemps.isNotEmpty ? (nightTemps.reduce((a, b) => a + b) / nightTemps.length).round() : 0,
+        });
+      });
+
+      // Сортируем по дате и берем первые 5 дней
+      processedForecast.sort((a, b) => a["date"].compareTo(b["date"]));
+      RequestCheck.forecastWeather = processedForecast.take(5).toList();
+
+      // Логирование результатов
+      print("✅ Прогноз успешно загружен");
+      RequestCheck.forecastWeather.forEach((day) {
+        print(
+            "${day["dayOfWeek"]}: "
+                "Макс днем: ${day["maxTemp"]}°C, "
+                "Мин ночью: ${day["minTemp"]}°C, "
+                "Ср.день: ${day["avgDayTemp"]}°C, "
+                "Ср.ночь: ${day["avgNightTemp"]}°C, "
+                "Иконка дня: ${day["dayIcon"]}, "
+                "Иконка ночи: ${day["nightIcon"]}"
+        );
+      });
+
+    } catch (e) {
+      print("❌ Критическая ошибка в fetchFiveDayForecast: $e");
+    }
+  }
+
+// Вспомогательные методы
+  static String _getMostFrequentIcon(List<String> icons) {
+    if (icons.isEmpty) return "01d";
+    var counts = <String, int>{};
+    for (var icon in icons) {
+      counts[icon] = (counts[icon] ?? 0) + 1;
+    }
+    return counts.entries.reduce((a, b) => a.value > b.value ? a : b).key;
+  }
+
+  static String getWeekday(String date) {
+    try {
+      DateTime parsedDate = DateTime.parse(date);
+      List<String> weekdays = [
+        "Воскресенье", "Понедельник", "Вторник", "Среда",
+        "Четверг", "Пятница", "Суббота"
+      ];
+      return weekdays[parsedDate.weekday % 7];
+    } catch (e) {
+      print("⚠️ Ошибка определения дня недели: $e");
+      return "Неизвестно";
+    }
+  }
+
+  /// Преобразует динамическое значение в double, предотвращая ошибки типа
+  static double _parseToDouble(dynamic value) {
+    if (value is int) {
+      return value.toDouble();
+    } else if (value is double) {
+      return value;
+    } else {
+      return 0.0; // Значение по умолчанию
+    }
+  }
+
 }
