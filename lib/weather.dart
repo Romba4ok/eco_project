@@ -1,10 +1,15 @@
+import 'dart:math';
+
 import 'package:Eco/appSizes.dart';
 import 'package:Eco/info.dart';
+import 'package:Eco/map.dart';
 import 'package:Eco/permission.dart';
 import 'package:Eco/request.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:weather_icons/weather_icons.dart';
 import 'package:intl/intl.dart';
 
@@ -14,6 +19,41 @@ class WeatherPage extends StatefulWidget {
 }
 
 class _WeatherPageState extends State<WeatherPage> {
+  final Random random = Random();
+  List<Map<String, dynamic>> airQualityData = [];
+
+  // Генерация случайных значений AQI
+  void generateRandomAirQualityData() {
+    List<LatLng> locations = [
+      LatLng(43.2220, 76.8512), // Центр Алматы
+      LatLng(43.2455, 76.9182), // ВДНХ
+      LatLng(43.2195, 76.8936), // Орбита
+      LatLng(43.2357, 76.9094), // Ботанический сад
+      LatLng(43.2565, 76.9281), // Мега Алматы
+      LatLng(43.2705, 76.8906), // Первомайские пруды
+    ];
+
+    List<Map<String, dynamic>> results = locations.map((loc) {
+      return {
+        "lat": loc.latitude,
+        "lng": loc.longitude,
+        "aqi": random.nextInt(201), // AQI от 0 до 200
+      };
+    }).toList();
+
+    setState(() {
+      airQualityData = results;
+    });
+  }
+
+  // Цвет маркера в зависимости от AQI
+  Color getAQIColor(int aqi) {
+    if (aqi <= 50) return Colors.green;
+    if (aqi <= 100) return Colors.yellow;
+    if (aqi <= 150) return Colors.orange;
+    return Colors.red;
+  }
+
   ScrollController _scrollController =
       ScrollController(); // Контроллер для синхронизации
   String? state;
@@ -31,8 +71,8 @@ class _WeatherPageState extends State<WeatherPage> {
     ecoText = RequestCheck.pollutionLevelText;
     time = RequestCheck.time;
     state = RequestCheck.state;
-    maxDayTemp = RequestCheck.getMaxDayTemperature();
-    minNightTemp = RequestCheck.getMinNightTemperature();
+    maxDayTemp = RequestCheck.forecastWeather.first["maxTemp"] ?? 0;
+    minNightTemp = RequestCheck.forecastWeather.first["minTemp"] ?? 0;
   }
 
   Future<void> handlePermissionCheck() async {
@@ -57,6 +97,7 @@ class _WeatherPageState extends State<WeatherPage> {
     } else {
       setState(() {
         dataRequest();
+        generateRandomAirQualityData();
       });
     }
 
@@ -71,6 +112,7 @@ class _WeatherPageState extends State<WeatherPage> {
         return false;
       }
     }).toList();
+    print(filteredForecast.length);
   }
 
   void getUpcomingDays() {
@@ -125,8 +167,10 @@ class _WeatherPageState extends State<WeatherPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Icon(RequestCheck.iconList[0],
-                        color: Colors.white, size: AppSizes.width * 0.25),
+                    BoxedIcon(
+                        RequestCheck.getWeatherIcon(RequestCheck.icons[0]),
+                        color: Colors.white,
+                        size: AppSizes.width * 0.25),
                     Row(
                       children: [
                         Text("${RequestCheck.temperatures[0]}°",
@@ -320,62 +364,242 @@ class _WeatherPageState extends State<WeatherPage> {
                   ),
                 ),
               ),
-          RequestCheck.forecastWeather.isEmpty
-              ? Center(
-            child: Text("Нет данных", style: TextStyle(color: Colors.white)),
-          )
-              : Container(
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              children: RequestCheck.forecastWeather.take(5).map((day) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // День недели
-                      Text(
-                        day["dayOfWeek"] ?? "—",
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
-
-                      // Влажность
-                      Row(
+              SizedBox(height: AppSizes.height * 0.02),
+              Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Color(0xFF1E1E1E),
+                  borderRadius: BorderRadius.circular(AppSizes.width * 0.02),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start, // Выровнять всё влево
+                  children: RequestCheck.forecastWeather.map((day) {
+                    return Padding(
+                      padding: EdgeInsets.symmetric(vertical: AppSizes.height * 0.01, horizontal: AppSizes.width * 0.01),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center, // Выровнять элементы по центру
+                        mainAxisAlignment: MainAxisAlignment.start, // Выровнять всё влево
                         children: [
-                          Icon(Icons.water_drop, color: Colors.grey, size: 16),
-                          SizedBox(width: 4),
-                          Text("${day["avgHumidity"] ?? 0}%",
-                              style: TextStyle(color: Colors.white)),
+                          // ✅ День недели (фиксированная ширина)
+                          SizedBox(
+                            width: AppSizes.width * 0.19, // Чтобы все дни недели были одинаковой ширины
+                            child: Text(
+                              day["dayOfWeek"] ?? "—",
+                              style: TextStyle(color: Colors.white, fontSize: AppSizes.width * 0.04, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+
+                          SizedBox(width: AppSizes.width * 0.03), // Отступ
+
+                          // ✅ Влажность (фиксированная ширина)
+                          SizedBox(
+                            width: AppSizes.width * 0.11,
+                            child: Row(
+                              children: [
+                                Icon(Icons.water_drop, color: Colors.grey, size: AppSizes.width * 0.04),
+                                SizedBox(width: 4),
+                                Text(
+                                  "${day["avgHumidity"] ?? 0}%",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          SizedBox(width: AppSizes.width * 0.03), // Отступ
+
+                          // ✅ Иконка дневной погоды
+                          SizedBox(
+                            width: AppSizes.width * 0.11,
+                            child: BoxedIcon(
+                              RequestCheck.getWeatherIcon(day["dayIcon"] ?? ""),
+                              color: Colors.white,
+                            ),
+                          ),
+
+                          SizedBox(width: AppSizes.width * 0.03), // Отступ
+
+                          // ✅ Иконка ночной погоды
+                          SizedBox(
+                            width: AppSizes.width * 0.11,
+                            child: BoxedIcon(
+                              RequestCheck.getWeatherIcon(day["nightIcon"] ?? ""),
+                              color: Colors.white,
+                            ),
+                          ),
+
+                          SizedBox(width: AppSizes.width * 0.03),// Отступ
+                          Expanded(
+                            child: Text(
+                              "${day["maxTemp"] ?? "—"}° / ${day["minTemp"] ?? "—"}°",
+                              style: TextStyle(color: Colors.white, fontSize: AppSizes.width * 0.04),
+                            ),
+                          ),
                         ],
                       ),
-
-                      // Иконка дневной погоды
-                      BoxedIcon(
-                        RequestCheck.getWeatherIcon(day["dayIcon"] ?? ""),
-                        color: Colors.yellow,
+                    );
+                  }).toList(),
+                ),
+              ),
+              SizedBox(height: AppSizes.height * 0.02),
+              Container(
+                padding: EdgeInsets.symmetric(
+                    vertical: AppSizes.height * 0.03,
+                    horizontal: AppSizes.width * 0.01),
+                decoration: BoxDecoration(
+                  color: Color(0xFF1E1E1E),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Column(
+                      children: [
+                        Text(
+                          "Восход",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: AppSizes.width * 0.05),
+                        ),
+                        Text(
+                          "${RequestCheck.sunriseTime?.hour ?? 0}:"
+                              "${RequestCheck.sunriseTime?.minute ?? 0}",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: AppSizes.width * 0.05,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(height: AppSizes.height * 0.02),
+                        Image.asset(
+                          'assets/images/sunrise.png',
+                          // Путь к вашему изображению
+                          width: AppSizes.width * 0.3,
+                          height: AppSizes.height * 0.07,
+                          fit: BoxFit
+                              .cover, // Как изображение должно вписываться
+                        ),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        Text(
+                          "Закат",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: AppSizes.width * 0.05),
+                        ),
+                        Text(
+                          "${RequestCheck.sunsetTime?.hour ?? 0}:"
+                          "${RequestCheck.sunsetTime?.minute ?? 0}",
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: AppSizes.width * 0.05,
+                              fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(height: AppSizes.height * 0.02),
+                        Image.asset(
+                          'assets/images/sunset.png',
+                          // Путь к вашему изображению
+                          width: AppSizes.width * 0.3,
+                          height: AppSizes.height * 0.07,
+                          fit: BoxFit
+                              .cover, // Как изображение должно вписываться
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: AppSizes.height * 0.02),
+              Container(
+                padding: EdgeInsets.symmetric(
+                    vertical: AppSizes.height * 0.03,
+                    horizontal: AppSizes.width * 0.04),
+                decoration: BoxDecoration(
+                  color: Color(0xFF1E1E1E),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "AQI Карта",
+                      style: TextStyle(
+                          color: Colors.white, fontSize: AppSizes.width * 0.055, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: AppSizes.height * 0.01),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => AlmatyAirQualityMap()),
+                        );
+                      },
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          height: AppSizes.height * 0.2, // Маленькая карта
+                          decoration: BoxDecoration(
+                              border:
+                                  Border.all(color: Colors.white, width: 2)),
+                          child: FlutterMap(
+                            options: MapOptions(
+                              initialCenter: LatLng(43.238949, 76.889709),
+                              initialZoom: 10.5,
+                              onTap: (_, __) { // 👉 Добавляем обработчик клика прямо на карте
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => AlmatyAirQualityMap()),
+                                );
+                              },
+                            ),
+                            children: [
+                              TileLayer(
+                                urlTemplate:
+                                    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                subdomains: ['a', 'b', 'c'],
+                              ),
+                              MarkerLayer(
+                                markers: airQualityData.map((data) {
+                                  return Marker(
+                                    point: LatLng(data["lat"], data["lng"]),
+                                    width: 25,
+                                    height: 25,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: getAQIColor(data["aqi"]),
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black26,
+                                            blurRadius: 2,
+                                            spreadRadius: 1,
+                                          ),
+                                        ],
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        "${data["aqi"]}",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-
-                      // Иконка ночной погоды
-                      BoxedIcon(
-                        RequestCheck.getWeatherIcon(day["nightIcon"] ?? ""),
-                        color: Colors.blue,
-                      ),
-
-                      // Температура
-                      Text(
-                        "${day["maxTemp"] ?? "—"}° / ${day["minTemp"] ?? "—"}°",
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: AppSizes.height * 0.03),
             ],
           ),
         ),

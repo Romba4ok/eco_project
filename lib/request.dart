@@ -23,10 +23,21 @@ class RequestCheck {
   static final String apiKey = "0f21dc0b-4bc6-46e2-85e0-57fbac370543";
   static final String apiKeyWeather = "21ac8e81ee16d60dacb39e207c9de134";
   static List<dynamic> forecast = [];
-  static List<dynamic> forecastWeather = [];
   static List<IconData> iconList = [];
   static List<int> temperatures = [];
+  static List<int> humidities = [];
+  static List<String> icons = [];
   static final SupabaseClient _supabase = Supabase.instance.client;
+  static List<List<int>> dayTemperatures = [];
+  static List<List<int>> nightTemperatures = [];
+  static List<List<String>> dayIcons = [];
+  static List<List<String>> nightIcons = [];
+  static List<List<int>> himiditeesDays = [];
+  static List<Map<String, dynamic>> forecastWeather = [];
+  static int sunrise = 0; // Время рассвета (в секундах UNIX)
+  static int sunset = 0;
+  static DateTime? sunriseTime;
+  static DateTime? sunsetTime;
 
   static Future<void> init() async {
     loading = false;
@@ -135,27 +146,60 @@ class RequestCheck {
         "https://api.openweathermap.org/data/2.5/forecast?lat=$latitude&lon=$longitude&appid=$apiKeyWeather&units=metric";
 
     final response = await http.get(Uri.parse(url));
+
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       forecast = data['list'];
-      print(forecast);
 
+      // Получение информации о городе
       String cityName = data['city']['name'];
       String country = data['city']['country'];
-      print("📍 Город: $cityName, Страна: $country");
+      int timeZoneOffset = data['city']['timezone']; // Смещение в секундах
 
-      temperatures = forecast.map<int>((item) {
-        return (item['main']['temp'] as num).round();
-      }).toList();
+      // Время рассвета и заката в UTC
+      int sunriseUTC = data['city']['sunrise'];
+      int sunsetUTC = data['city']['sunset'];
+
+      // Конвертируем в локальное время
+      sunriseTime = DateTime.fromMillisecondsSinceEpoch(sunriseUTC * 1000, isUtc: true).toLocal();
+      sunsetTime = DateTime.fromMillisecondsSinceEpoch(sunsetUTC * 1000, isUtc: true).toLocal();
+
+      // Форматируем время
+      String formattedSunrise = DateFormat('HH:mm').format(sunriseTime!);
+      String formattedSunset = DateFormat('HH:mm').format(sunsetTime!);
+
+      // Вывод в консоль
+      print("📍 Город: $cityName, Страна: $country");
+      print("🌅 Рассвет (локальное время): $formattedSunrise");
+      print("🌇 Закат (локальное время): $formattedSunset");
+
+      // Границы дня
+      sunrise = sunriseTime!.hour;
+      sunset = sunsetTime!.hour;
+
+      // Очистка списков перед записью новых данных
+      temperatures.clear();
+      icons.clear();
+      humidities.clear();
+
+      // Обрабатываем погоду
+      for (var item in forecast) {
+        int temp = (item['main']['temp'] as num).round();
+        int humidity = (item['main']['humidity'] as num).round();
+        String iconCode = item['weather'][0]['icon'];
+
+        temperatures.add(temp);
+        icons.add(iconCode);
+        humidities.add(humidity);
+      }
 
       print("🌡️ Температуры на 5 дней: $temperatures");
 
-      // Группируем прогноз по дням
+      // Группировка прогноза по дням
       Map<String, List<String>> dailyWeather = {};
-
       for (var item in forecast) {
-        String date = item['dt_txt'].split(' ')[0]; // Получаем дату YYYY-MM-DD
-        String iconCode = item['weather'][0]['icon']; // Код иконки
+        String date = item['dt_txt'].split(' ')[0];
+        String iconCode = item['weather'][0]['icon'];
 
         if (!dailyWeather.containsKey(date)) {
           dailyWeather[date] = [];
@@ -163,21 +207,92 @@ class RequestCheck {
         dailyWeather[date]!.add(iconCode);
       }
 
-      // Очищаем иконки перед заполнением
+      // Очистка списков перед записью новых данных
       iconList.clear();
+      dayTemperatures.clear();
+      nightTemperatures.clear();
+      dayIcons.clear();
+      nightIcons.clear();
 
-      // Определяем главную иконку для каждого дня
+      // Выбираем главную иконку дня
       dailyWeather.forEach((date, icons) {
-        String mostFrequentIcon =
-            getMostFrequentWeather(icons); // Находим самую частую иконку дня
+        String mostFrequentIcon = getMostFrequentWeather(icons);
         iconList.add(getWeatherIcon(mostFrequentIcon));
       });
 
       print(iconList);
+
+      // Обработка данных для дневных и ночных температур
+      String? currentDate;
+      for (int i = 0; i < forecast.length; i++) {
+        String dateTime = forecast[i]['dt_txt'];
+        String date = dateTime.split(" ")[0];
+
+        // Локальное время
+        DateTime localTime = DateTime.fromMillisecondsSinceEpoch(
+            (forecast[i]['dt'] + timeZoneOffset) * 1000);
+        int localHour = localTime.hour;
+        print(sunrise);
+        print(sunset);
+
+        // Определяем день или ночь
+        bool isDay = localHour >= sunrise + 5 && localHour < sunset + 5;
+
+        if (currentDate == null || currentDate != date) {
+          // Добавляем новый день в списки
+          dayTemperatures.add([]);
+          nightTemperatures.add([]);
+          dayIcons.add([]);
+          nightIcons.add([]);
+          currentDate = date;
+        }
+
+        if (isDay) {
+          dayTemperatures.last.add(temperatures[i]);
+          dayIcons.last.add(icons[i]);
+        } else {
+          nightTemperatures.last.add(temperatures[i]);
+          nightIcons.last.add(icons[i]);
+        }
+      }
+
+      // Вывод в консоль
+      print("🌞 Дневные температуры: $dayTemperatures");
+      print("🌙 Ночные температуры: $nightTemperatures");
+      print("🌞 Дневные иконки: $dayIcons");
+      print("🌙 Ночные иконки: $nightIcons");
+
+      // Обработка влажности по дням
+      himiditeesDays.clear();
+      currentDate = null;
+      List<int> dailyHumidity = [];
+
+      for (var item in forecast) {
+        String date = item['dt_txt'].split(' ')[0];
+        int humidityValue = (item['main']['humidity'] as num).round();
+
+        if (currentDate == null || currentDate != date) {
+          if (dailyHumidity.isNotEmpty) {
+            himiditeesDays.add(List.from(dailyHumidity));
+            dailyHumidity.clear();
+          }
+          currentDate = date;
+        }
+
+        dailyHumidity.add(humidityValue);
+      }
+
+      if (dailyHumidity.isNotEmpty) {
+        himiditeesDays.add(List.from(dailyHumidity));
+      }
+
+      print("💧 Влажность по дням: $himiditeesDays");
     } else {
       throw Exception("Ошибка загрузки данных");
     }
   }
+
+
 
   static String getMostFrequentWeather(List<String> weatherList) {
     Map<String, int> weatherCount = {};
@@ -191,6 +306,7 @@ class RequestCheck {
     final String url = "http://api.airvisual.com/v2/nearest_city?lat=$latitude&lon=$longitude&key=$apiKey";
 
     var response = await http.get(Uri.parse(url));
+
     if (response.statusCode == 200) {
       var jsonData = json.decode(response.body);
       int aqi = jsonData['data']['current']['pollution']['aqius'].toInt();
@@ -228,155 +344,84 @@ class RequestCheck {
     }
   }
 
-  static int getMaxDayTemperature() {
-    try {
-      List<double> dayTemps = forecast
-          .where((item) {
-        String hour = item['dt_txt']?.split(' ')?.elementAt(1)?.split(':')?.first ?? '12';
-        int hourInt = int.tryParse(hour) ?? 12;
-        return hourInt >= 6 && hourInt < 18;
-      })
-          .map<double>((item) => (item['main']['temp'] as num?)?.toDouble() ?? 0.0)
-          .toList();
-
-      if (dayTemps.isEmpty) return 0;
-      return dayTemps.reduce((a, b) => a > b ? a : b).round();
-    } catch (e) {
-      print('Ошибка в getMaxDayTemperature: $e');
-      return 0;
-    }
-  }
-
-  static int getMinNightTemperature() {
-    try {
-      List<double> nightTemps = forecast
-          .where((item) {
-        String hour = item['dt_txt']?.split(' ')?.elementAt(1)?.split(':')?.first ?? '0';
-        int hourInt = int.tryParse(hour) ?? 0;
-        return hourInt >= 18 || hourInt < 6;
-      })
-          .map<double>((item) => (item['main']['temp'] as num?)?.toDouble() ?? 0.0)
-          .toList();
-
-      if (nightTemps.isEmpty) return 0;
-      return nightTemps.reduce((a, b) => a < b ? a : b).round();
-    } catch (e) {
-      print('Ошибка в getMinNightTemperature: $e');
-      return 0;
-    }
-  }
-
   static Future<void> fetchFiveDayForecast() async {
-    final String url =
-        "https://api.openweathermap.org/data/2.5/forecast?lat=$latitude&lon=$longitude&appid=$apiKeyWeather&units=metric";
+    List<int> maxDayTemperatures = [];
+    List<int> minNightTemperatures = [];
+    List<String> mostCommonDayIcons = [];
+    List<String> mostCommonNightIcons = [];
+    List<int> averageHumidityPerDay = [];
+    List<String> daysOfWeek = [];
 
-    try {
-      print("🌍 Запрос прогноза погоды: $url");
-      final response = await http.get(Uri.parse(url));
+    forecastWeather.clear();
 
-      if (response.statusCode != 200) {
-        print("❌ Ошибка ${response.statusCode}: ${response.body}");
-        return;
+    for (int i = 0; i < dayTemperatures.length && i < 5; i++) {
+      if (dayTemperatures[i].isNotEmpty) {
+        maxDayTemperatures.add(dayTemperatures[i].reduce((a, b) => a > b ? a : b));
+      } else {
+        maxDayTemperatures.add(0);
       }
 
-      final data = jsonDecode(response.body);
-      if (data["list"] == null || data["list"].isEmpty) {
-        print("⚠️ Нет данных прогноза");
-        return;
+      if (nightTemperatures[i].isNotEmpty) {
+        minNightTemperatures.add(nightTemperatures[i].reduce((a, b) => a < b ? a : b));
+      } else {
+        minNightTemperatures.add(0);
       }
 
-      // Словарь для хранения данных по дням
-      Map<String, Map<String, dynamic>> dailyData = {};
-
-      for (var entry in data["list"]) {
-        try {
-          String date = entry["dt_txt"]?.split(" ")?.first ?? "";
-          if (date.isEmpty) continue;
-
-          String time = entry["dt_txt"]?.split(" ")?.elementAt(1) ?? "";
-          int hour = int.tryParse(time.split(":").first) ?? 0;
-          bool isDaytime = hour >= 6 && hour < 18;
-
-          double temp = (entry["main"]["temp"] as num?)?.toDouble() ?? 0.0;
-          int humidity = entry["main"]["humidity"] as int? ?? 0;
-          String icon = entry["weather"][0]["icon"]?.toString() ?? "01d";
-
-          // Инициализация дня если его еще нет
-          if (!dailyData.containsKey(date)) {
-            dailyData[date] = {
-              "dayOfWeek": getWeekday(date),
-              "tempValues": [],
-              "humidityValues": [],
-              "dayIcons": [],
-              "nightIcons": [],
-            };
-          }
-
-          // Добавляем данные
-          dailyData[date]!["tempValues"].add(temp);
-          dailyData[date]!["humidityValues"].add(humidity);
-
-          if (isDaytime) {
-            dailyData[date]!["dayIcons"].add(icon);
-          } else {
-            dailyData[date]!["nightIcons"].add(icon);
-          }
-        } catch (e) {
-          print("⚠️ Ошибка обработки записи прогноза: $e");
-        }
+      if (dayIcons[i].isNotEmpty) {
+        mostCommonDayIcons.add(getMostFrequentWeathers(dayIcons[i]));
+      } else {
+        mostCommonDayIcons.add("unknown");
       }
 
-      // Обработка собранных данных
-      List<Map<String, dynamic>> processedForecast = [];
-
-      dailyData.forEach((date, data) {
-        List<double> temps = List<double>.from(data["tempValues"]);
-        List<int> humidities = List<int>.from(data["humidityValues"]);
-        List<String> dayIcons = List<String>.from(data["dayIcons"]);
-        List<String> nightIcons = List<String>.from(data["nightIcons"]);
-
-        processedForecast.add({
-          "date": date,
-          "dayOfWeek": data["dayOfWeek"],
-          "maxTemp": temps.reduce((a, b) => a > b ? a : b).round(),
-          "minTemp": temps.reduce((a, b) => a < b ? a : b).round(),
-          "avgHumidity": (humidities.reduce((a, b) => a + b) / humidities.length).round(),
-          "dayIcon": _getMostFrequentIcon(dayIcons),
-          "nightIcon": _getMostFrequentIcon(nightIcons),
-        });
-      });
-
-      // Сортируем по дате и берем первые 5 дней
-      processedForecast.sort((a, b) => a["date"].compareTo(b["date"]));
-      RequestCheck.forecastWeather = processedForecast.take(5).toList();
-
-      // Логирование результатов
-      print("✅ Прогноз успешно загружен");
-      RequestCheck.forecastWeather.forEach((day) {
-        print(
-            "${day["dayOfWeek"]}: "
-                "Макс ${day["maxTemp"]}°C, "
-                "Мин ${day["minTemp"]}°C, "
-                "Влажность ${day["avgHumidity"]}%, "
-                "День: ${day["dayIcon"]}, "
-                "Ночь: ${day["nightIcon"]}"
-        );
-      });
-
-    } catch (e) {
-      print("❌ Критическая ошибка в fetchFiveDayForecast: $e");
+      if (nightIcons[i].isNotEmpty) {
+        mostCommonNightIcons.add(getMostFrequentWeathers(nightIcons[i]));
+      } else {
+        mostCommonNightIcons.add("unknown");
+      }
     }
+
+    averageHumidityPerDay.clear();
+    for (int i = 0; i < himiditeesDays.length && i < 5; i++) {
+      if (himiditeesDays[i].isNotEmpty) {
+        int sumHumidity = himiditeesDays[i].reduce((a, b) => a + b);
+        int avgHumidity = (sumHumidity / himiditeesDays[i].length).round();
+        averageHumidityPerDay.add(avgHumidity);
+      } else {
+        averageHumidityPerDay.add(0);
+      }
+    }
+
+    for (int i = 0; i < 5; i++) {
+      DateTime day = DateTime.now().add(Duration(days: i));
+      String dayName = DateFormat('EEEE', 'ru_RU').format(day);
+      daysOfWeek.add(dayName);
+    }
+
+    for (int i = 0; i < 5; i++) {
+      forecastWeather.add({
+        "dayOfWeek": daysOfWeek[i],
+        "avgHumidity": averageHumidityPerDay[i],
+        "dayIcon": mostCommonDayIcons[i],
+        "nightIcon": mostCommonNightIcons[i],
+        "maxTemp": maxDayTemperatures[i],
+        "minTemp": minNightTemperatures[i],
+      });
+    }
+
+    print("🌦️ Прогноз на 5 дней: $forecastWeather");
   }
 
-// Вспомогательные методы
-  static String _getMostFrequentIcon(List<String> icons) {
-    if (icons.isEmpty) return "01d";
-    var counts = <String, int>{};
+
+
+// Функция для нахождения самой частой иконки
+  static String getMostFrequentWeathers(List<String> icons) {
+    Map<String, int> frequency = {};
     for (var icon in icons) {
-      counts[icon] = (counts[icon] ?? 0) + 1;
+      frequency[icon] = (frequency[icon] ?? 0) + 1;
     }
-    return counts.entries.reduce((a, b) => a.value > b.value ? a : b).key;
+    return frequency.entries.reduce((a, b) => a.value > b.value ? a : b).key;
   }
+
 
   static String getWeekday(String date) {
     try {
@@ -391,16 +436,4 @@ class RequestCheck {
       return "Неизвестно";
     }
   }
-
-  /// Преобразует динамическое значение в double, предотвращая ошибки типа
-  static double _parseToDouble(dynamic value) {
-    if (value is int) {
-      return value.toDouble();
-    } else if (value is double) {
-      return value;
-    } else {
-      return 0.0; // Значение по умолчанию
-    }
-  }
-
 }

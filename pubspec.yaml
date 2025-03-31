@@ -123,6 +123,8 @@ flutter:
      - assets/images/number_one.png
      - assets/images/number_two.png
      - assets/images/number_three.png
+     - assets/images/sunset.png
+     - assets/images/sunrise.png
      - assets/images/ads.png
   #   - images/a_dot_ham.jpeg
   # An image asset can refer to one or more resolution-specific "variants", see

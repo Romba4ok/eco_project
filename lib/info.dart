@@ -25,6 +25,7 @@ class _PageInfoState extends State<PageInfo> {
   bool loading = false;
   List<String> weekdaysRu = ["пн", "вт", "ср", "чт", "пт", "сб", "вс"];
   List<String> days = [];
+  int? precipitation;
 
   void dataRequest() {
     color = RequestCheck.pollutionLevelColor;
@@ -417,6 +418,7 @@ class _PageInfoState extends State<PageInfo> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
+                              // Локация
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -435,22 +437,33 @@ class _PageInfoState extends State<PageInfo> {
                                   ),
                                 ],
                               ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
+                              SizedBox(
+                                height: AppSizes.height * 0.01,
+                              ),
+                              RequestCheck.forecastWeather.isEmpty
+                                  ? Center(
+                                child: Text("Нет данных", style: TextStyle(color: Colors.white)),
+                              )
+                                  : Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                 children: [
+                                  // Основная иконка + температура
                                   Row(
                                     children: [
                                       Icon(
-                                        RequestCheck.iconList[0],
+                                        RequestCheck.getWeatherIcon(
+                                            DateTime.now().hour >= 6 && DateTime.now().hour < 18
+                                                ? RequestCheck.forecastWeather[0]["dayIcon"]
+                                                : RequestCheck.forecastWeather[0]["nightIcon"]
+                                        ),
                                         color: Colors.white,
                                         size: AppSizes.width * 0.1,
                                       ),
-                                      SizedBox(
-                                        width: AppSizes.width * 0.02,
-                                      ),
+                                      SizedBox(width: AppSizes.width * 0.05),
                                       Text(
-                                        "${RequestCheck.temperatures[0]}",
+                                        "${DateTime.now().hour >= 6 && DateTime.now().hour < 18
+                                            ? RequestCheck.forecastWeather[0]["maxTemp"]
+                                            : RequestCheck.forecastWeather[0]["minTemp"]}°",
                                         style: TextStyle(
                                           color: Colors.white,
                                           fontWeight: FontWeight.bold,
@@ -459,57 +472,31 @@ class _PageInfoState extends State<PageInfo> {
                                       ),
                                     ],
                                   ),
-                                  SizedBox(
-                                    width: AppSizes.width * 0.02,
-                                  ),
-                                  Column(
-                                    children: [
-                                      Icon(
-                                        RequestCheck.iconList[1],
-                                        color: Colors.white,
-                                        size: AppSizes.width * 0.07,
-                                      ),
-                                      Text(days[0],
+
+                                  SizedBox(width: AppSizes.width * 0.02),
+
+                                  // Следующие 3 дня
+                                  for (int i = 1; i < 4 && i < RequestCheck.forecastWeather.length; i++)
+                                    Column(
+                                      children: [
+                                        Icon(
+                                          RequestCheck.getWeatherIcon(RequestCheck.forecastWeather[i]["dayIcon"]),
+                                          color: Colors.white,
+                                          size: AppSizes.width * 0.09,
+                                        ),
+                                        Text(
+                                          days[i - 1],
                                           style: TextStyle(
                                             color: Colors.white,
                                             fontSize: AppSizes.width * 0.05,
-                                          )),
-                                    ],
-                                  ),
-                                  Column(
-                                    children: [
-                                      Icon(
-                                        RequestCheck.iconList[2],
-                                        color: Colors.white,
-                                        size: AppSizes.width * 0.07,
-                                      ),
-                                      Text(
-                                        days[1],
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: AppSizes.width * 0.05,
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  Column(
-                                    children: [
-                                      Icon(
-                                        RequestCheck.iconList[3],
-                                        color: Colors.white,
-                                        size: AppSizes.width * 0.07,
-                                      ),
-                                      Text(
-                                        days[2],
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: AppSizes.width * 0.05,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                      ],
+                                    ),
                                 ],
                               ),
+
+                              // Время + кнопка обновления
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -541,6 +528,7 @@ class _PageInfoState extends State<PageInfo> {
                         ),
                       ),
                     ),
+
                   ],
                 ),
               ),
