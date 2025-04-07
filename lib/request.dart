@@ -6,7 +6,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:weather_icons/weather_icons.dart';
 import 'package:intl/intl.dart';
 
-
 class RequestCheck {
   static bool loading = false;
   static double? latitude;
@@ -38,6 +37,8 @@ class RequestCheck {
   static int sunset = 0;
   static DateTime? sunriseTime;
   static DateTime? sunsetTime;
+  static List<double> windSpeedList = [];
+  static List<(IconData icon, String text, Color color)> recommendations = [];
 
   static Future<void> init() async {
     loading = false;
@@ -46,6 +47,7 @@ class RequestCheck {
     await fetchWeatherForecast();
     await updateGeoUser();
     await fetchFiveDayForecast();
+    getRecommendation();
     loading =
         true; // Теперь loading устанавливается в true только после полной загрузки данных
   }
@@ -55,7 +57,6 @@ class RequestCheck {
     if (user != null) {
       await _supabase.from('users').update({'state': state}).eq('id', user.id);
       await _supabase.from('users').update({'city': city}).eq('id', user.id);
-
     }
   }
 
@@ -75,6 +76,8 @@ class RequestCheck {
 
     if (response.statusCode == 200) {
       var jsonData = json.decode(response.body);
+      print("iqair");
+      print(jsonData);
       city = jsonData['data']['city'];
       state = jsonData['data']['state'];
       pollutionLevel =
@@ -149,6 +152,8 @@ class RequestCheck {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
+      print("weather");
+      print(data);
       forecast = data['list'];
 
       // Получение информации о городе
@@ -161,8 +166,12 @@ class RequestCheck {
       int sunsetUTC = data['city']['sunset'];
 
       // Конвертируем в локальное время
-      sunriseTime = DateTime.fromMillisecondsSinceEpoch(sunriseUTC * 1000, isUtc: true).toLocal();
-      sunsetTime = DateTime.fromMillisecondsSinceEpoch(sunsetUTC * 1000, isUtc: true).toLocal();
+      sunriseTime =
+          DateTime.fromMillisecondsSinceEpoch(sunriseUTC * 1000, isUtc: true)
+              .toLocal();
+      sunsetTime =
+          DateTime.fromMillisecondsSinceEpoch(sunsetUTC * 1000, isUtc: true)
+              .toLocal();
 
       // Форматируем время
       String formattedSunrise = DateFormat('HH:mm').format(sunriseTime!);
@@ -176,6 +185,16 @@ class RequestCheck {
       // Границы дня
       sunrise = sunriseTime!.hour;
       sunset = sunsetTime!.hour;
+      for (var forecastItem in forecast) {
+        double windSpeed = forecastItem['wind']['speed']; // Скорость ветра
+        windSpeedList
+            .add(windSpeed); // Добавляем строку с информацией о скорости ветра
+      }
+
+      print("Wind Speed List:");
+      for (var windSpeed in windSpeedList) {
+        print(windSpeed); // Выводим все элементы списка
+      }
 
       // Очистка списков перед записью новых данных
       temperatures.clear();
@@ -236,7 +255,7 @@ class RequestCheck {
         print(sunset);
 
         // Определяем день или ночь
-        bool isDay = localHour >= sunrise + 5 && localHour < sunset + 5;
+        bool isDay = localHour > sunrise + 5 && localHour < sunset + 5;
 
         if (currentDate == null || currentDate != date) {
           // Добавляем новый день в списки
@@ -292,8 +311,6 @@ class RequestCheck {
     }
   }
 
-
-
   static String getMostFrequentWeather(List<String> weatherList) {
     Map<String, int> weatherCount = {};
     for (var weather in weatherList) {
@@ -303,7 +320,8 @@ class RequestCheck {
   }
 
   Future<Map<String, dynamic>> getAQI(double latitude, double longitude) async {
-    final String url = "http://api.airvisual.com/v2/nearest_city?lat=$latitude&lon=$longitude&key=$apiKey";
+    final String url =
+        "http://api.airvisual.com/v2/nearest_city?lat=$latitude&lon=$longitude&key=$apiKey";
 
     var response = await http.get(Uri.parse(url));
 
@@ -316,22 +334,22 @@ class RequestCheck {
 
       if (aqi >= 0 && aqi <= 50) {
         levelText = "Отлично";
-        levelColor = Colors.green;
+        levelColor = Color(0xFF00FF00);
       } else if (aqi > 50 && aqi <= 100) {
         levelText = "Хорошо";
-        levelColor = Colors.yellow;
+        levelColor = Color(0xFFFFFF00);
       } else if (aqi > 100 && aqi <= 150) {
         levelText = "Средне";
-        levelColor = Colors.orange;
+        levelColor = Color(0xFFFFA500);
       } else if (aqi > 150 && aqi <= 200) {
         levelText = "Вредно";
-        levelColor = Colors.red;
+        levelColor = Color(0xFFFF0000);
       } else if (aqi > 200 && aqi <= 300) {
         levelText = "Угрожающе";
-        levelColor = Colors.purple;
+        levelColor = Color(0xFF800080);
       } else {
         levelText = "Опасно";
-        levelColor = Colors.indigo;
+        levelColor = Color(0xFF4B0082);
       }
 
       return {
@@ -356,13 +374,15 @@ class RequestCheck {
 
     for (int i = 0; i < dayTemperatures.length && i < 5; i++) {
       if (dayTemperatures[i].isNotEmpty) {
-        maxDayTemperatures.add(dayTemperatures[i].reduce((a, b) => a > b ? a : b));
+        maxDayTemperatures
+            .add(dayTemperatures[i].reduce((a, b) => a > b ? a : b));
       } else {
         maxDayTemperatures.add(0);
       }
 
       if (nightTemperatures[i].isNotEmpty) {
-        minNightTemperatures.add(nightTemperatures[i].reduce((a, b) => a < b ? a : b));
+        minNightTemperatures
+            .add(nightTemperatures[i].reduce((a, b) => a < b ? a : b));
       } else {
         minNightTemperatures.add(0);
       }
@@ -411,8 +431,6 @@ class RequestCheck {
     print("🌦️ Прогноз на 5 дней: $forecastWeather");
   }
 
-
-
 // Функция для нахождения самой частой иконки
   static String getMostFrequentWeathers(List<String> icons) {
     Map<String, int> frequency = {};
@@ -422,13 +440,17 @@ class RequestCheck {
     return frequency.entries.reduce((a, b) => a.value > b.value ? a : b).key;
   }
 
-
   static String getWeekday(String date) {
     try {
       DateTime parsedDate = DateTime.parse(date);
       List<String> weekdays = [
-        "Воскресенье", "Понедельник", "Вторник", "Среда",
-        "Четверг", "Пятница", "Суббота"
+        "Воскресенье",
+        "Понедельник",
+        "Вторник",
+        "Среда",
+        "Четверг",
+        "Пятница",
+        "Суббота"
       ];
       return weekdays[parsedDate.weekday % 7];
     } catch (e) {
@@ -436,4 +458,49 @@ class RequestCheck {
       return "Неизвестно";
     }
   }
+
+  static getRecommendation() {
+    if (pollutionLevel >= 0 && pollutionLevel <= 50) {
+      recommendations = [
+        (Icons.sports, 'Наслаждайтесь активным отдыхом на улице', Color(0xFF00FF00)),
+        (Icons.window, 'Откройте окна,чтобы впустить  в помещение\nчистый и  воздух', Color(0xFF00FF00)),
+      ];
+    } else if (pollutionLevel > 50 && pollutionLevel <= 100) {
+      recommendations = [
+        (Icons.sports, 'Людям, имеющим повышенную чувствительность,\nследует сократить занятия спортом на открытом\nвоздухе', Color(0xFFFFFF00)),
+        (Icons.window, 'Закройте окна,чтобы избежать грязного\nнаружного воздуха', Color(0xFFFFFF00)),
+        (Icons.air, 'Людям с повышенной чувствительностью следует\nиспользовать очиститель воздуха', Color(0xFFFFFF00)),
+        (Icons.masks, 'Чувствительные группы должны носить маску на\nоткрытом воздухе', Color(0xFFFFFF00)),
+      ];
+    } else if (pollutionLevel > 100 && pollutionLevel <= 150) {
+      recommendations = [
+        (Icons.sports, 'Уменьшите физические нагрузки на свежем\nвоздухе', Color(0xFFFFA500)),
+        (Icons.window, 'Закройте окна,чтобы избежать грязного\nнаружного воздуха', Color(0xFFFFA500)),
+        (Icons.air, 'Запустите очиститель воздуха ', Color(0xFFFFA500)),
+        (Icons.masks, 'Чувствительные группы должны носить маску на\nоткрытом воздухе', Color(0xFFFFA500)),
+      ];
+    } else if (pollutionLevel > 150 && pollutionLevel <= 200) {
+      recommendations = [
+        (Icons.sports, 'Избегайте тренировок на свежем воздухе ', Color(0xFFFF0000)),
+        (Icons.window, 'Закройте окна,чтобы избежать грязного\nнаружного воздуха', Color(0xFFFF0000)),
+        (Icons.air, 'Запустите очиститель воздуха  ', Color(0xFFFF0000)),
+        (Icons.masks, 'Носите маску на открытом воздухе', Color(0xFFFF0000)),
+      ];
+    } else if (pollutionLevel > 200 && pollutionLevel <= 300) {
+      recommendations = [
+        (Icons.sports, 'Избегайте тренировок на свежем воздухе ', Color(0xFF800080)),
+        (Icons.window, 'Закройте окна,чтобы избежать грязного\nнаружного воздуха', Color(0xFF800080)),
+        (Icons.air, 'Запустите очиститель воздуха ', Color(0xFF800080)),
+        (Icons.masks, 'Носите маску на открытом воздухе', Color(0xFF800080)),
+      ];
+    } else {
+      recommendations = [
+        (Icons.sports, 'Избегайте тренировок на свежем воздухе ', Color(0xFF4B0082)),
+        (Icons.window, 'Закройте окна,чтобы избежать грязного\nнаружного воздуха', Color(0xFF4B0082)),
+        (Icons.air, 'Запустите очиститель воздуха', Color(0xFF4B0082)),
+        (Icons.masks, 'Носите маску на открытом воздухе', Color(0xFF4B0082)),
+      ];
+    }
+  }
 }
+

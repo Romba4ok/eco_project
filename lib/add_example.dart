@@ -2,7 +2,10 @@ import 'dart:io';
 
 import 'package:Eco/appSizes.dart';
 import 'package:Eco/supabase_config.dart';
+import 'package:Eco/titles.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 
 class AddExamplePage extends StatefulWidget {
@@ -17,21 +20,230 @@ class AddExamplePage extends StatefulWidget {
 }
 
 class _AddExamplePageState extends State<AddExamplePage> {
-  File? _selectedImage; // Хранит выбранное изображение
+  int selectedTitleIndex = 0;
+  Duration? taskDuration;
 
-  Future<void> _pickImage(FormFieldState<File?> fieldState) async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(
-      source: ImageSource.gallery, // Можно заменить на ImageSource.camera
+  void _selectDuration() async {
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        int days = taskDuration?.inDays ?? 0;
+        int hours = taskDuration != null ? (taskDuration!.inHours % 24) : 0;
+        int minutes = taskDuration != null ? (taskDuration!.inMinutes % 60) : 0;
+
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Color(0xFF1E1E1E),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text("Выберите время выполнения",
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white)),
+                  SizedBox(height: 16),
+
+                  /// Быстрый выбор времени
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildTopButton(
+                        "Не особое",
+                        null,
+                        isSelected: taskDuration == null,
+                      ),
+                      _buildTopButton(
+                        "1 Час",
+                        Duration(hours: 1),
+                        isSelected: taskDuration == Duration(hours: 1),
+                      ),
+                      _buildTopButton(
+                        "2 Часа",
+                        Duration(hours: 2),
+                        isSelected: taskDuration == Duration(hours: 2),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 16),
+
+                  /// Ручной выбор времени
+                  _buildTimePicker(
+                    (d, h, m) {
+                      setModalState(() {
+                        days = d;
+                        hours = h;
+                        minutes = m;
+                      });
+                    },
+                    days,
+                    hours,
+                    minutes,
+                  ),
+
+                  SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text("Отменить",
+                            style: TextStyle(color: Colors.grey)),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            taskDuration =
+                                (days > 0 || hours > 0 || minutes > 0)
+                                    ? Duration(
+                                        days: days,
+                                        hours: hours,
+                                        minutes: minutes)
+                                    : null;
+                          });
+                          print(taskDuration);
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green),
+                        child: Text("Подтвердить"),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
+  }
 
-    if (pickedFile != null) {
-      setState(() {
-        _selectedImage =
-            File(pickedFile.path); // Сохраняем выбранное изображение
-      });
-      fieldState.didChange(_selectedImage); // Уведомляем форму об изменении
-    }
+  /// Верхние кнопки быстрого выбора
+  Widget _buildTopButton(String label, Duration? duration,
+      {required bool isSelected}) {
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: ElevatedButton(
+          onPressed: () {
+            setState(() {
+              // <--- Добавлен setState для обновления UI
+              taskDuration = duration;
+            });
+            Navigator.pop(context);
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: isSelected ? Colors.white24 : Colors.grey[800],
+            padding: EdgeInsets.symmetric(vertical: 12),
+          ),
+          child: Text(label),
+        ),
+      ),
+    );
+  }
+
+  /// Виджет выбора времени
+  Widget _buildTimePicker(
+    Function(int, int, int) onChanged,
+    int days,
+    int hours,
+    int minutes,
+  ) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildNumberPicker(
+              label: "Д",
+              max: 31,
+              value: days,
+              onChanged: (val) => onChanged(val, hours, minutes),
+            ),
+            SizedBox(width: 16),
+            _buildNumberPicker(
+              label: "Ч",
+              max: 23,
+              value: hours,
+              onChanged: (val) => onChanged(days, val, minutes),
+            ),
+            SizedBox(width: 16),
+            _buildNumberPicker(
+              label: "М",
+              max: 59,
+              value: minutes,
+              onChanged: (val) => onChanged(days, hours, val),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Виджет колеса выбора числа
+  Widget _buildNumberPicker({
+    required String label,
+    required int max,
+    required int value,
+    required ValueChanged<int> onChanged,
+  }) {
+    return Column(
+      children: [
+        Text(label, style: TextStyle(color: Colors.white54)),
+        SizedBox(height: 4),
+        Container(
+          height: 120,
+          width: 64,
+          decoration: BoxDecoration(
+            color: Colors.grey[900],
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: ListWheelScrollView.useDelegate(
+            itemExtent: 36,
+            diameterRatio: 1.2,
+            physics: FixedExtentScrollPhysics(),
+            squeeze: 0.8,
+            onSelectedItemChanged: onChanged,
+            controller: FixedExtentScrollController(initialItem: value),
+            // Устанавливаем сохраненное значение
+            childDelegate: ListWheelChildBuilderDelegate(
+              builder: (context, index) {
+                return Center(
+                  child: Text(
+                    '$index',
+                    style: TextStyle(
+                      fontSize: 22,
+                      color: index == value ? Colors.white : Colors.white54,
+                    ),
+                  ),
+                );
+              },
+              childCount: max + 1,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatDuration(Duration duration) {
+    int days = duration.inDays;
+    int hours = duration.inHours % 24;
+    int minutes = duration.inMinutes % 60;
+
+    List<String> parts = [];
+    if (days > 0) parts.add("$days д.");
+    if (hours > 0) parts.add("$hours ч.");
+    if (minutes > 0) parts.add("$minutes м.");
+
+    return parts.isNotEmpty ? parts.join(" ") : "Не выбрано";
   }
 
   String? headingValidator(String? value) {
@@ -50,23 +262,6 @@ class _AddExamplePageState extends State<AddExamplePage> {
 
   final TextEditingController headingController = TextEditingController();
   final TextEditingController sourceController = TextEditingController();
-
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  final DatabaseService _databaseService = DatabaseService();
-
-  Future<void> _savePost() async {
-    if (_selectedImage != null &&
-        headingController.text.isNotEmpty &&
-        sourceController.text.isNotEmpty) {
-      // Вызываем метод сервиса для сохранения поста
-      await _databaseService.savePost(
-          _selectedImage!, headingController.text, sourceController.text, "");
-    } else {
-      // Показываем сообщение, если что-то не заполнено
-      print('Пожалуйста, заполните все поля и выберите изображение.');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -176,7 +371,7 @@ class _AddExamplePageState extends State<AddExamplePage> {
                   children: [
                     GestureDetector(
                       onTap: () {
-                          widget.togglePage(2);
+                        widget.togglePage(2);
                       },
                       child: Container(
                         height: AppSizes.height * 0.1,
@@ -305,126 +500,266 @@ class _AddExamplePageState extends State<AddExamplePage> {
                 ),
                 SizedBox(height: AppSizes.height * 0.01),
                 Container(
-                  width: 300, // Ширина контейнера
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.all(AppSizes.width * 0.03),
                   decoration: BoxDecoration(
-                    color: Color(0xFF1E1E1E), // Тёмный фон
-                    borderRadius:
-                        BorderRadius.circular(20.0), // Закруглённые углы
+                    borderRadius: BorderRadius.circular(20.0),
+                    border: Border.all(
+                      width: 2,
+                      color: Color(0xFF333333),
+                    ),
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Заголовок и кнопка закрытия
+                      SizedBox(
+                        height: AppSizes.height * 0.02,
+                      ),
+                      Center(
+                        child: Text(
+                          "Заголовок",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: AppSizes.width * 0.04,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: AppSizes.height * 0.01),
+                      TextField(
+                        decoration: InputDecoration(
+                          hintText: "Ввести заголовок задания...",
+                          hintStyle: TextStyle(color: Color(0xFF909090)),
+                          filled: true,
+                          fillColor: Color(0xFF1E1E1E),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF565656)),
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF565656)),
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.red),
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.red),
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                        ),
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      SizedBox(height: AppSizes.height * 0.02),
+                      Center(
+                        child: Text(
+                          "Краткое описание и награда",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: AppSizes.width * 0.04,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: AppSizes.height * 0.01),
+                      TextField(
+                        decoration: InputDecoration(
+                          hintText: "Введите краткое описание...",
+                          hintStyle: TextStyle(color: Color(0xFF909090)),
+                          filled: true,
+                          fillColor: Color(0xFF1E1E1E),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF565656)),
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Color(0xFF565656)),
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.red),
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: Colors.red),
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                        ),
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      SizedBox(height: AppSizes.height * 0.02),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            "Заголовок",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                "Особое задание",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: AppSizes.width * 0.04,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Icon(
+                                FontAwesomeIcons.fireFlameCurved,
+                                size: AppSizes.width * 0.05,
+                                color: Color(0xFFFF8000),
+                              ),
+                            ],
                           ),
-                          Icon(Icons.close, color: Colors.white),
+                          Row(
+                            children: [
+                              Text(
+                                "Награда",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: AppSizes.width * 0.04,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(width: 8),
+                              Container(
+                                width: AppSizes.width * 0.15,
+                                child: TextField(
+                                  decoration: InputDecoration(
+                                    hintText: "ecocoin",
+                                    hintStyle:
+                                        TextStyle(color: Color(0xFF909090)),
+                                    filled: true,
+                                    fillColor: Color(0xFF1E1E1E),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderSide:
+                                          BorderSide(color: Color(0xFF565656)),
+                                      borderRadius: BorderRadius.circular(12.0),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderSide:
+                                          BorderSide(color: Color(0xFF565656)),
+                                      borderRadius: BorderRadius.circular(12.0),
+                                    ),
+                                    errorBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(color: Colors.red),
+                                      borderRadius: BorderRadius.circular(12.0),
+                                    ),
+                                    focusedErrorBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(color: Colors.red),
+                                      borderRadius: BorderRadius.circular(12.0),
+                                    ),
+                                  ),
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
-                      SizedBox(height: 8),
-                      // Поле ввода заголовка
-                      TextField(
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Color(0xFF2A2A2A),
-                          hintText: "Ввести заголовок задания...",
-                          hintStyle: TextStyle(color: Colors.grey),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                            borderSide: BorderSide.none,
+                      ElevatedButton(
+                        onPressed: _selectDuration,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        style: TextStyle(color: Colors.white),
+                        child: Text(
+                          taskDuration != null
+                              ? "${_formatDuration(taskDuration!)}"
+                              : "Не особое",
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
                       ),
                       SizedBox(height: 16),
-                      // Подзаголовок
-                      Text(
-                        "Краткое описание и награда",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      Text("Титул за задание:",
+                          style: TextStyle(color: Colors.white)),
                       SizedBox(height: 8),
-                      // Поле ввода описания
-                      TextField(
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Color(0xFF2A2A2A),
-                          hintText: "Введите краткое описание...",
-                          hintStyle: TextStyle(color: Colors.grey),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10.0),
-                            borderSide: BorderSide.none,
-                          ),
+                      Container(
+                        padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Color(0xFF1E1E1E),
+                          borderRadius: BorderRadius.circular(20.0),
                         ),
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      SizedBox(height: 16),
-                      // Переключатель и награда
-                      Row(
-                        children: [
-                          Text(
-                            "Особое \nзадание",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          Spacer(),
-                          Switch(
-                            value: false,
-                            onChanged: (bool value) {},
-                            activeColor: Color(0xFF68E30B),
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            "Награда:",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          SizedBox(width: 8),
-                          Container(
-                            width: 70,
-                            height: 30,
-                            decoration: BoxDecoration(
-                              color: Color(0xFF2A2A2A),
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
-                            child: Center(
-                              child: Text(
-                                "ecooin...",
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("Титул за задание:",
+                                style: TextStyle(color: Colors.white)),
+                            SizedBox(height: 8),
+                            DropdownButtonHideUnderline(
+                              child: DropdownButton<int>(
+                                value: selectedTitleIndex,
+                                dropdownColor: Color(0xFF2A2A2A),
+                                // Темный фон выпадающего списка
                                 style: TextStyle(color: Colors.white),
+                                onChanged: (int? newIndex) {
+                                  setState(() {
+                                    selectedTitleIndex = newIndex!;
+                                    print(selectedTitleIndex);
+                                  });
+                                },
+                                items: Titles.titles
+                                    .asMap()
+                                    .entries
+                                    .map<DropdownMenuItem<int>>((entry) {
+                                  int index = entry.key;
+                                  Map<String, dynamic> title = entry.value;
+
+                                  return DropdownMenuItem<int>(
+                                    value: index,
+                                    child: Container(
+                                      width: AppSizes.width * 0.45,
+                                      padding: EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        gradient: title["color"],
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: ShaderMask(
+                                        shaderCallback: (bounds) {
+                                          return title["colorText"]
+                                              .createShader(bounds);
+                                        },
+                                        child: Text(
+                                          title["name"],
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
                               ),
                             ),
-                          ),
-                        ],
+                            SizedBox(height: 16),
+                          ],
+                        ),
                       ),
                       SizedBox(height: 16),
-                      // Кнопка "Сохранить"
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: null, // Отключенная кнопка
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF2A2A2A),
-                            disabledBackgroundColor: Color(0xFF2A2A2A),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10.0),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          TextButton(
+                            onPressed: () {},
+                            child: Text("Удалить",
+                                style: TextStyle(color: Colors.red)),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {},
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFF68E30B),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
                             ),
+                            child: Text("Сохранить",
+                                style: TextStyle(color: Colors.white)),
                           ),
-                          child: Text(
-                            "Сохранить",
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ),
+                        ],
                       ),
                     ],
                   ),

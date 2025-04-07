@@ -1,10 +1,12 @@
 import 'package:Eco/appSizes.dart';
 import 'package:Eco/currency_info.dart';
+import 'package:Eco/examples.dart';
 import 'package:Eco/pageSelection.dart';
 import 'package:Eco/shop.dart';
 import 'package:Eco/supabase_config.dart';
 import 'package:Eco/titles.dart';
 import 'package:Eco/top.dart';
+import 'package:Eco/training_examples1.dart';
 import 'package:Eco/training_shop1.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -81,6 +83,21 @@ class _BalancePageState extends State<BalancePage> {
       Navigator.pushReplacement(context, route);
     } else {
       Route route = MaterialPageRoute(builder: (context) => ShopPage());
+      Navigator.pushReplacement(context, route);
+    }
+  }
+
+  Future<void> _checkIfFirstTimeBalance() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool hasSeenOnboarding = prefs.getBool('examples_page') ?? false;
+
+    if (!hasSeenOnboarding) {
+      await prefs.setBool(
+          'examples_page', true);
+      Route route = MaterialPageRoute(builder: (context) => TrainingExamples1());
+      Navigator.pushReplacement(context, route);
+    } else {
+      Route route = MaterialPageRoute(builder: (context) => ExamplesPage());
       Navigator.pushReplacement(context, route);
     }
   }
@@ -181,7 +198,7 @@ class _BalancePageState extends State<BalancePage> {
                                           horizontal: AppSizes.width * 0.02,
                                           vertical: AppSizes.height * 0.01),
                                       decoration: BoxDecoration(
-                                        color: Colors.black,
+                                        color: Color(0xFF282828),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: GestureDetector(
@@ -218,8 +235,8 @@ class _BalancePageState extends State<BalancePage> {
                                                   as Gradient? ??
                                               LinearGradient(
                                                 colors: [
-                                                  Colors.grey,
-                                                  Colors.grey[300]!
+                                                  Color(0xFF282828),
+                                                  Color(0xFF282828),
                                                 ],
                                                 begin: Alignment.topLeft,
                                                 end: Alignment.bottomRight,
@@ -296,48 +313,53 @@ class _BalancePageState extends State<BalancePage> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Container(
-                                    width: AppSizes.width * 0.43,
-                                    height: AppSizes.height * 0.35,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(16),
-                                      // border: Border.all(
-                                      //   color: Color(0xFFA7EC6A), // Цвет границы
-                                      //   width: 2,
-                                      // ),
-                                      image: DecorationImage(
-                                        image: AssetImage(
-                                            'assets/images/balance_container_background.png'),
-                                        // Путь к изображению
-                                        fit: BoxFit
-                                            .cover, // Растянуть изображение на весь контейнер
+                                  GestureDetector(
+                                    onTap: () {
+                                      _checkIfFirstTimeBalance();
+                                    },
+                                    child: Container(
+                                      width: AppSizes.width * 0.43,
+                                      height: AppSizes.height * 0.35,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(16),
+                                        // border: Border.all(
+                                        //   color: Color(0xFFA7EC6A), // Цвет границы
+                                        //   width: 2,
+                                        // ),
+                                        image: DecorationImage(
+                                          image: AssetImage(
+                                              'assets/images/balance_container_background.png'),
+                                          // Путь к изображению
+                                          fit: BoxFit
+                                              .cover, // Растянуть изображение на весь контейнер
+                                        ),
                                       ),
-                                    ),
-                                    child: Padding(
-                                      padding:
-                                          EdgeInsets.all(AppSizes.width * 0.04),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Баланс',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: AppSizes.width * 0.06,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                          Text(
-                                            'Показать всю \nсумму',
-                                            style: TextStyle(
+                                      child: Padding(
+                                        padding: EdgeInsets.all(
+                                            AppSizes.width * 0.04),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Задания',
+                                              style: TextStyle(
                                                 color: Colors.white,
-                                                fontSize:
-                                                    AppSizes.width * 0.04),
-                                            textAlign: TextAlign.start,
-                                          ),
-                                        ],
+                                                fontSize: AppSizes.width * 0.06,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                            Text(
+                                              'просмотр списка \nаданий',
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize:
+                                                      AppSizes.width * 0.04),
+                                              textAlign: TextAlign.start,
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -558,22 +580,27 @@ class _BalancePageState extends State<BalancePage> {
                   top: 0,
                   left: 0,
                   right: 0,
-                  child: Padding(
-                    padding: EdgeInsets.only(
+                  child: AppBar(
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    title: Padding(
+                      padding: EdgeInsets.only(
                         top: AppSizes.height * 0.01,
-                        left: AppSizes.width * 0.03,
-                        right: AppSizes.width * 0.03),
-                    child: AppBar(
-                      backgroundColor: Colors.transparent,
-                      elevation: 0,
-                      title: Text(
+                      ),
+                      child: Text(
                         '$name',
                         style: TextStyle(
                             color: Colors.white,
                             fontSize: AppSizes.width * 0.07),
                       ),
-                      centerTitle: true,
-                      leading: IconButton(
+                    ),
+                    centerTitle: true,
+                    leading: Padding(
+                      padding: EdgeInsets.only(
+                        top: AppSizes.height * 0.01,
+                        left: AppSizes.width * 0.03,
+                      ),
+                      child: IconButton(
                         icon: Icon(
                           Icons.arrow_back,
                           color: Colors.white,
@@ -669,12 +696,12 @@ class _BalancePageState extends State<BalancePage> {
                 flex: 1,
                 child: userRanks.contains(index)
                     ? _buildGradientButton(
-                  Titles.titles[index]["name"],
-                  Titles.titles[index]["color"],
-                  Titles.titles[index]["colorText"],
-                  index,
-                  userId,
-                )
+                        Titles.titles[index]["name"],
+                        Titles.titles[index]["color"],
+                        Titles.titles[index]["colorText"],
+                        index,
+                        userId,
+                      )
                     : _buildEmptyBox(),
               ),
               SizedBox(width: AppSizes.width * 0.07),
@@ -683,12 +710,12 @@ class _BalancePageState extends State<BalancePage> {
                 flex: 1,
                 child: userRanks.contains(index + 3)
                     ? _buildGradientButton(
-                  Titles.titles[index + 3]["name"],
-                  Titles.titles[index + 3]["color"],
-                  Titles.titles[index + 3]["colorText"],
-                  index + 3,
-                  userId,
-                )
+                        Titles.titles[index + 3]["name"],
+                        Titles.titles[index + 3]["color"],
+                        Titles.titles[index + 3]["colorText"],
+                        index + 3,
+                        userId,
+                      )
                     : _buildEmptyBox(),
               ),
             ],
@@ -699,8 +726,8 @@ class _BalancePageState extends State<BalancePage> {
   }
 
 // Градиентная кнопка для наград
-  Widget _buildGradientButton(
-      String text, LinearGradient backgroundGradient, LinearGradient textGradient, int rankIndex, String userId) {
+  Widget _buildGradientButton(String text, LinearGradient backgroundGradient,
+      LinearGradient textGradient, int rankIndex, String userId) {
     return GestureDetector(
       onTap: () async {
         await _databaseService.updateUserSelectRank(userId, rankIndex);
@@ -724,8 +751,8 @@ class _BalancePageState extends State<BalancePage> {
           child: Center(
             child: FittedBox(
               child: ShaderMask(
-                shaderCallback: (bounds) =>
-                    textGradient.createShader(Rect.fromLTWH(0, 0, bounds.width, bounds.height)),
+                shaderCallback: (bounds) => textGradient.createShader(
+                    Rect.fromLTWH(0, 0, bounds.width, bounds.height)),
                 blendMode: BlendMode.srcIn,
                 child: Text(
                   text,
