@@ -80,10 +80,10 @@ class _BalancePageState extends State<BalancePage> {
     if (!hasSeenOnboarding) {
       await prefs.setBool('seen_onboarding', true);
       Route route = MaterialPageRoute(builder: (context) => TrainingShop1());
-      Navigator.pushReplacement(context, route);
+      Navigator.push(context, route);
     } else {
       Route route = MaterialPageRoute(builder: (context) => ShopPage());
-      Navigator.pushReplacement(context, route);
+      Navigator.push(context, route);
     }
   }
 
@@ -95,10 +95,10 @@ class _BalancePageState extends State<BalancePage> {
       await prefs.setBool(
           'examples_page', true);
       Route route = MaterialPageRoute(builder: (context) => TrainingExamples1());
-      Navigator.pushReplacement(context, route);
+      Navigator.push(context, route);
     } else {
       Route route = MaterialPageRoute(builder: (context) => ExamplesPage());
-      Navigator.pushReplacement(context, route);
+      Navigator.push(context, route);
     }
   }
 
@@ -172,7 +172,7 @@ class _BalancePageState extends State<BalancePage> {
                                       decoration: BoxDecoration(
                                         image: DecorationImage(
                                           image: AssetImage(
-                                              'assets/images/union_white.png'),
+                                              'assets/icons/union_white.png'),
                                           fit: BoxFit.cover,
                                         ),
                                       ),
@@ -205,7 +205,7 @@ class _BalancePageState extends State<BalancePage> {
                                         onTap: () {
                                           Route route = MaterialPageRoute(
                                               builder: (context) => TopPage());
-                                          Navigator.pushReplacement(
+                                          Navigator.push(
                                               context, route);
                                         },
                                         child: Center(
@@ -370,7 +370,7 @@ class _BalancePageState extends State<BalancePage> {
                                           Route route = MaterialPageRoute(
                                               builder: (context) =>
                                                   CurrencyInfo());
-                                          Navigator.pushReplacement(
+                                          Navigator.push(
                                               context, route);
                                         },
                                         child: Container(
@@ -491,7 +491,7 @@ class _BalancePageState extends State<BalancePage> {
                                 onTap: () {
                                   Route route = MaterialPageRoute(
                                       builder: (context) => TopPage());
-                                  Navigator.pushReplacement(context, route);
+                                  Navigator.push(context, route);
                                 },
                                 child: Container(
                                   width: AppSizes.width,
@@ -607,9 +607,7 @@ class _BalancePageState extends State<BalancePage> {
                           size: AppSizes.width * 0.08,
                         ),
                         onPressed: () {
-                          Route route = MaterialPageRoute(
-                              builder: (context) => PageSelection());
-                          Navigator.pushReplacement(context, route);
+                          Navigator.pop(context);
                         },
                       ),
                     ),

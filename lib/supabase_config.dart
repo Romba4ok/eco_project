@@ -530,4 +530,24 @@ class DatabaseService {
       print('Ошибка при обновлении select_rank: $e');
     }
   }
+
+  Future<String?> addTask({
+    required String title,
+    required String description,
+    required String special,
+    required DateTime time,
+    required int coins,
+    required int experience,
+  }) async {
+
+      final response = await _supabase.from('examples').insert({
+        'title': title,
+        'description': description,
+        'special': special,
+        'time': time.toIso8601String(),
+        'coins': coins,
+        'experience': experience,
+      });
+
+  }
 }

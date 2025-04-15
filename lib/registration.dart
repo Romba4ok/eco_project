@@ -359,7 +359,7 @@ class RegistrationState extends State<Registration> {
                       // Центрирование по вертикали
                       children: [
                         Image.asset(
-                          'assets/images/google_logo.png',
+                          'assets/icons/google_logo.png',
                         ),
                         SizedBox(
                           width: AppSizes.width * 0.04,

@@ -216,7 +216,7 @@ class _EditExamplePageState extends State<EditExamplePage> {
                                     decoration: BoxDecoration(
                                       image: DecorationImage(
                                         image:
-                                        AssetImage('assets/images/ads.png'),
+                                        AssetImage('assets/icons/ads.png'),
                                         fit: BoxFit.cover,
                                       ),
                                     ),
@@ -267,7 +267,7 @@ class _EditExamplePageState extends State<EditExamplePage> {
                                     decoration: BoxDecoration(
                                       image: DecorationImage(
                                         image:
-                                        AssetImage('assets/images/ads.png'),
+                                        AssetImage('assets/icons/ads.png'),
                                         fit: BoxFit.cover,
                                       ),
                                     ),

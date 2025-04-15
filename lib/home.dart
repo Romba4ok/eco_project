@@ -59,10 +59,10 @@ class _StateHomePage extends State<HomePage> {
       await prefs.setBool(
           'examples_page', true);
       Route route = MaterialPageRoute(builder: (context) => TrainingExamples1());
-      Navigator.pushReplacement(context, route);
+      Navigator.push(context, route);
     } else {
       Route route = MaterialPageRoute(builder: (context) => ExamplesPage());
-      Navigator.pushReplacement(context, route);
+      Navigator.push(context, route);
     }
   }
 
@@ -126,7 +126,7 @@ class _StateHomePage extends State<HomePage> {
                                 User? user = supabase.auth.currentUser;
                                 if (user != null) {
                                   Route route = MaterialPageRoute(builder: (context) => BalancePage());
-                                  Navigator.pushReplacement(context, route);
+                                  Navigator.push(context, route);
                                 } else {
                                   print('Передача в togglePage(1)');  // Проверка
                                   widget.togglePage(1);

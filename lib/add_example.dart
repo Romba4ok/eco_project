@@ -22,6 +22,11 @@ class AddExamplePage extends StatefulWidget {
 class _AddExamplePageState extends State<AddExamplePage> {
   int selectedTitleIndex = 0;
   Duration? taskDuration;
+  TextEditingController coinsController = TextEditingController();
+  TextEditingController experienceController = TextEditingController();
+  TextEditingController titleController = TextEditingController();
+  TextEditingController descriptionController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   void _selectDuration() async {
     await showModalBottomSheet(
@@ -246,22 +251,33 @@ class _AddExamplePageState extends State<AddExamplePage> {
     return parts.isNotEmpty ? parts.join(" ") : "Не выбрано";
   }
 
-  String? headingValidator(String? value) {
+  String? titleValidator(String? value) {
     if (value == null || value.isEmpty) {
       return 'Введите заголовок';
     }
     return null;
   }
 
-  String? sourceValidator(String? value) {
+  String? descriptionValidator(String? value) {
     if (value == null || value.isEmpty) {
       return 'Введите источник';
     }
     return null;
   }
 
-  final TextEditingController headingController = TextEditingController();
-  final TextEditingController sourceController = TextEditingController();
+  String? coinsValidator(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Введите источник';
+    }
+    return null;
+  }
+
+  String? experienceValidator(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Введите источник';
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -393,7 +409,7 @@ class _AddExamplePageState extends State<AddExamplePage> {
                                     decoration: BoxDecoration(
                                       image: DecorationImage(
                                         image:
-                                            AssetImage('assets/images/ads.png'),
+                                            AssetImage('assets/icons/ads.png'),
                                         fit: BoxFit.cover,
                                       ),
                                     ),
@@ -444,7 +460,7 @@ class _AddExamplePageState extends State<AddExamplePage> {
                                     decoration: BoxDecoration(
                                       image: DecorationImage(
                                         image:
-                                            AssetImage('assets/images/ads.png'),
+                                            AssetImage('assets/icons/ads.png'),
                                         fit: BoxFit.cover,
                                       ),
                                     ),
@@ -499,269 +515,314 @@ class _AddExamplePageState extends State<AddExamplePage> {
                   ],
                 ),
                 SizedBox(height: AppSizes.height * 0.01),
-                Container(
-                  padding: EdgeInsets.all(AppSizes.width * 0.03),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20.0),
-                    border: Border.all(
-                      width: 2,
-                      color: Color(0xFF333333),
+                Form(
+                  key: _formKey,
+                  child: Container(
+                    padding: EdgeInsets.all(AppSizes.width * 0.03),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20.0),
+                      border: Border.all(
+                        width: 2,
+                        color: Color(0xFF333333),
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(
-                        height: AppSizes.height * 0.02,
-                      ),
-                      Center(
-                        child: Text(
-                          "Заголовок",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: AppSizes.width * 0.04,
-                            fontWeight: FontWeight.bold,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                          height: AppSizes.height * 0.02,
+                        ),
+                        Center(
+                          child: Text(
+                            "Заголовок",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: AppSizes.width * 0.04,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ),
-                      SizedBox(height: AppSizes.height * 0.01),
-                      TextField(
-                        decoration: InputDecoration(
-                          hintText: "Ввести заголовок задания...",
-                          hintStyle: TextStyle(color: Color(0xFF909090)),
-                          filled: true,
-                          fillColor: Color(0xFF1E1E1E),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF565656)),
-                            borderRadius: BorderRadius.circular(12.0),
+                        SizedBox(height: AppSizes.height * 0.01),
+                        TextFormField(
+                          controller: titleController,
+                          decoration: InputDecoration(
+                            hintText: "Ввести заголовок задания...",
+                            hintStyle: TextStyle(color: Color(0xFF909090)),
+                            filled: true,
+                            fillColor: Color(0xFF1E1E1E),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Color(0xFF565656)),
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Color(0xFF565656)),
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                            errorBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.red),
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                            focusedErrorBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.red),
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF565656)),
-                            borderRadius: BorderRadius.circular(12.0),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.red),
-                            borderRadius: BorderRadius.circular(12.0),
-                          ),
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.red),
-                            borderRadius: BorderRadius.circular(12.0),
+                          style: TextStyle(color: Colors.white),
+                          validator: titleValidator,
+                        ),
+                        SizedBox(height: AppSizes.height * 0.02),
+                        Center(
+                          child: Text(
+                            "Краткое описание и награда",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: AppSizes.width * 0.04,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      SizedBox(height: AppSizes.height * 0.02),
-                      Center(
-                        child: Text(
-                          "Краткое описание и награда",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: AppSizes.width * 0.04,
-                            fontWeight: FontWeight.bold,
+                        SizedBox(height: AppSizes.height * 0.01),
+                        TextFormField(
+                          controller: descriptionController,
+                          decoration: InputDecoration(
+                            hintText: "Введите краткое описание...",
+                            hintStyle: TextStyle(color: Color(0xFF909090)),
+                            filled: true,
+                            fillColor: Color(0xFF1E1E1E),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Color(0xFF565656)),
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Color(0xFF565656)),
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                            errorBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.red),
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
+                            focusedErrorBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: Colors.red),
+                              borderRadius: BorderRadius.circular(12.0),
+                            ),
                           ),
+                          style: TextStyle(color: Colors.white),
+                          validator: descriptionValidator,
                         ),
-                      ),
-                      SizedBox(height: AppSizes.height * 0.01),
-                      TextField(
-                        decoration: InputDecoration(
-                          hintText: "Введите краткое описание...",
-                          hintStyle: TextStyle(color: Color(0xFF909090)),
-                          filled: true,
-                          fillColor: Color(0xFF1E1E1E),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF565656)),
-                            borderRadius: BorderRadius.circular(12.0),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Color(0xFF565656)),
-                            borderRadius: BorderRadius.circular(12.0),
-                          ),
-                          errorBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.red),
-                            borderRadius: BorderRadius.circular(12.0),
-                          ),
-                          focusedErrorBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.red),
-                            borderRadius: BorderRadius.circular(12.0),
-                          ),
-                        ),
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      SizedBox(height: AppSizes.height * 0.02),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                "Особое задание",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: AppSizes.width * 0.04,
-                                  fontWeight: FontWeight.bold,
+                        SizedBox(height: AppSizes.height * 0.02),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      "Особое задание",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: AppSizes.width * 0.04,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Icon(
+                                      FontAwesomeIcons.fireFlameCurved,
+                                      size: AppSizes.width * 0.05,
+                                      color: Color(0xFFFF8000),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              Icon(
-                                FontAwesomeIcons.fireFlameCurved,
-                                size: AppSizes.width * 0.05,
-                                color: Color(0xFFFF8000),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: [
-                              Text(
-                                "Награда",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: AppSizes.width * 0.04,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(width: 8),
-                              Container(
-                                width: AppSizes.width * 0.15,
-                                child: TextField(
-                                  decoration: InputDecoration(
-                                    hintText: "ecocoin",
-                                    hintStyle:
-                                        TextStyle(color: Color(0xFF909090)),
-                                    filled: true,
-                                    fillColor: Color(0xFF1E1E1E),
-                                    enabledBorder: OutlineInputBorder(
-                                      borderSide:
-                                          BorderSide(color: Color(0xFF565656)),
-                                      borderRadius: BorderRadius.circular(12.0),
-                                    ),
-                                    focusedBorder: OutlineInputBorder(
-                                      borderSide:
-                                          BorderSide(color: Color(0xFF565656)),
-                                      borderRadius: BorderRadius.circular(12.0),
-                                    ),
-                                    errorBorder: OutlineInputBorder(
-                                      borderSide: BorderSide(color: Colors.red),
-                                      borderRadius: BorderRadius.circular(12.0),
-                                    ),
-                                    focusedErrorBorder: OutlineInputBorder(
-                                      borderSide: BorderSide(color: Colors.red),
-                                      borderRadius: BorderRadius.circular(12.0),
+                                ElevatedButton(
+                                  onPressed: _selectDuration,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.grey,
+                                    padding: EdgeInsets.symmetric(
+                                        horizontal: AppSizes.width * 0.03,
+                                        vertical: AppSizes.height * 0.015),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
                                   ),
-                                  style: TextStyle(color: Colors.white),
+                                  child: Text(
+                                    taskDuration != null
+                                        ? "${_formatDuration(taskDuration!)}"
+                                        : "Нет",
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: AppSizes.width * 0.04),
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      ElevatedButton(
-                        onPressed: _selectDuration,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 24, vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(
-                          taskDuration != null
-                              ? "${_formatDuration(taskDuration!)}"
-                              : "Не особое",
-                          style: TextStyle(color: Colors.white, fontSize: 16),
-                        ),
-                      ),
-                      SizedBox(height: 16),
-                      Text("Титул за задание:",
-                          style: TextStyle(color: Colors.white)),
-                      SizedBox(height: 8),
-                      Container(
-                        padding: EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Color(0xFF1E1E1E),
-                          borderRadius: BorderRadius.circular(20.0),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("Титул за задание:",
-                                style: TextStyle(color: Colors.white)),
-                            SizedBox(height: 8),
-                            DropdownButtonHideUnderline(
-                              child: DropdownButton<int>(
-                                value: selectedTitleIndex,
-                                dropdownColor: Color(0xFF2A2A2A),
-                                // Темный фон выпадающего списка
-                                style: TextStyle(color: Colors.white),
-                                onChanged: (int? newIndex) {
-                                  setState(() {
-                                    selectedTitleIndex = newIndex!;
-                                    print(selectedTitleIndex);
-                                  });
-                                },
-                                items: Titles.titles
-                                    .asMap()
-                                    .entries
-                                    .map<DropdownMenuItem<int>>((entry) {
-                                  int index = entry.key;
-                                  Map<String, dynamic> title = entry.value;
-
-                                  return DropdownMenuItem<int>(
-                                    value: index,
-                                    child: Container(
-                                      width: AppSizes.width * 0.45,
-                                      padding: EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        gradient: title["color"],
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      child: ShaderMask(
-                                        shaderCallback: (bounds) {
-                                          return title["colorText"]
-                                              .createShader(bounds);
-                                        },
-                                        child: Text(
-                                          title["name"],
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
+                              ],
+                            ),
+                            Column(
+                              children: [
+                                Text(
+                                  "Награда:",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: AppSizes.width * 0.04,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: AppSizes.width * 0.15,
+                                      child: TextFormField(
+                                        controller: coinsController,
+                                        keyboardType: TextInputType.number,
+                                        decoration: InputDecoration(
+                                          hintText: "ecocoin",
+                                          hintStyle: TextStyle(
+                                              color: Color(0xFF909090)),
+                                          filled: true,
+                                          fillColor: Color(0xFF1E1E1E),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderSide: BorderSide(
+                                                color: Color(0xFF565656)),
+                                            borderRadius:
+                                                BorderRadius.circular(12.0),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderSide: BorderSide(
+                                                color: Color(0xFF565656)),
+                                            borderRadius:
+                                                BorderRadius.circular(12.0),
+                                          ),
+                                          errorBorder: OutlineInputBorder(
+                                            borderSide:
+                                                BorderSide(color: Colors.red),
+                                            borderRadius:
+                                                BorderRadius.circular(12.0),
+                                          ),
+                                          focusedErrorBorder:
+                                              OutlineInputBorder(
+                                            borderSide:
+                                                BorderSide(color: Colors.red),
+                                            borderRadius:
+                                                BorderRadius.circular(12.0),
                                           ),
                                         ),
+                                        style: TextStyle(color: Colors.white),
+                                        validator: coinsValidator,
                                       ),
                                     ),
-                                  );
-                                }).toList(),
-                              ),
+                                    SizedBox(width: AppSizes.width * 0.01),
+                                    Container(
+                                      width: AppSizes.width * 0.15,
+                                      child: TextFormField(
+                                        controller: experienceController,
+                                        keyboardType: TextInputType.number,
+                                        decoration: InputDecoration(
+                                          hintText: "experience",
+                                          hintStyle: TextStyle(
+                                              color: Color(0xFF909090)),
+                                          filled: true,
+                                          fillColor: Color(0xFF1E1E1E),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderSide: BorderSide(
+                                                color: Color(0xFF565656)),
+                                            borderRadius:
+                                                BorderRadius.circular(12.0),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderSide: BorderSide(
+                                                color: Color(0xFF565656)),
+                                            borderRadius:
+                                                BorderRadius.circular(12.0),
+                                          ),
+                                          errorBorder: OutlineInputBorder(
+                                            borderSide:
+                                                BorderSide(color: Colors.red),
+                                            borderRadius:
+                                                BorderRadius.circular(12.0),
+                                          ),
+                                          focusedErrorBorder:
+                                              OutlineInputBorder(
+                                            borderSide:
+                                                BorderSide(color: Colors.red),
+                                            borderRadius:
+                                                BorderRadius.circular(12.0),
+                                          ),
+                                        ),
+                                        style: TextStyle(color: Colors.white),
+                                        validator: experienceValidator,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
-                            SizedBox(height: 16),
                           ],
                         ),
-                      ),
-                      SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          TextButton(
-                            onPressed: () {},
-                            child: Text("Удалить",
-                                style: TextStyle(color: Colors.red)),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {},
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Color(0xFF68E30B),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10.0),
-                              ),
+                        SizedBox(height: AppSizes.height * 0.02),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            TextButton(
+                              onPressed: () {},
+                              child: Text("Удалить",
+                                  style: TextStyle(color: Colors.red)),
                             ),
-                            child: Text("Сохранить",
-                                style: TextStyle(color: Colors.white)),
-                          ),
-                        ],
-                      ),
-                    ],
+                            ElevatedButton(
+                              onPressed: () async {
+                                if (_formKey.currentState!.validate()) {
+                                  final now = DateTime.now();
+                                  final expiresAt = taskDuration != null ? now.add(taskDuration!) : DateTime.now();
+
+                                  final title = titleController.text.trim();
+                                  final description = descriptionController.text.trim();
+                                  final coins = int.tryParse(coinsController.text.trim()) ?? 0;
+                                  final experience = int.tryParse(experienceController.text.trim()) ?? 0;
+                                  final special = taskDuration != null ? 'special' : '';
+
+                                  DatabaseService service = DatabaseService();
+
+                                  // Добавляем задание и получаем ошибку (если есть)
+                                  final error = await service.addTask(
+                                    title: title,
+                                    description: description,
+                                    special: special,
+                                    time: expiresAt,
+                                    coins: coins,
+                                    experience: experience,
+                                  );
+
+                                  if (error == null) {
+                                    // Успех
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text("Задание успешно добавлено")),
+                                    );
+                                    titleController.clear();
+                                    descriptionController.clear();
+                                    coinsController.clear();
+                                    experienceController.clear();
+                                    setState(() {
+                                      taskDuration = null;
+                                    });
+                                  } else {
+                                   print(error);
+                                    ScaffoldMessenger.of(context).showSnackBar(
+
+                                      SnackBar(content: Text("Ошибка: $error")),
+                                    );
+                                  }
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Color(0xFF68E30B),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10.0),
+                                ),
+                              ),
+                              child: Text("Сохранить",
+                                  style: TextStyle(color: Colors.white)),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],

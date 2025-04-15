@@ -468,9 +468,7 @@ class _RecomendationsPageState extends State<RecomendationsPage> {
                     size: AppSizes.width * 0.08,
                   ),
                   onPressed: () {
-                    Route route =
-                        MaterialPageRoute(builder: (context) => PageInfo());
-                    Navigator.pushReplacement(context, route);
+                    Navigator.pop(context);
                   },
                 ),
               ),

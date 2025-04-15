@@ -186,7 +186,7 @@ class RequestCheck {
       sunrise = sunriseTime!.hour;
       sunset = sunsetTime!.hour;
       for (var forecastItem in forecast) {
-        double windSpeed = forecastItem['wind']['speed']; // Скорость ветра
+        double windSpeed = (forecastItem['wind']['speed'] as num).toDouble();
         windSpeedList
             .add(windSpeed); // Добавляем строку с информацией о скорости ветра
       }

@@ -465,7 +465,7 @@ class ImagePickerFormField extends FormField<File?> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Image.asset(
-          'assets/images/add_image.png',
+          'assets/icons/add_image.png',
           width: AppSizes.width * 0.07,
           height: AppSizes.height * 0.03,
         ),

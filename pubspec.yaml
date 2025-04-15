@@ -91,15 +91,15 @@ flutter:
      - assets/images/background_home.png
      - assets/images/container1_info.png
      - assets/images/container3_info.png
-     - assets/images/union.png
-     - assets/images/union_white.png
-     - assets/images/union_grey.png
+     - assets/icons/union.png
+     - assets/icons/union_white.png
+     - assets/icons/union_grey.png
      - assets/images/balance_container_background.png
      - assets/images/balance_container_background2.png
      - assets/images/balance_container_background3.png
      - assets/images/balance_container_background4.png
-     - assets/images/google_logo.png
-     - assets/images/add_image.png
+     - assets/icons/google_logo.png
+     - assets/icons/add_image.png
      - assets/images/balance_background.png
      - assets/images/container_balance.png
      - assets/images/currency_background.png
@@ -107,8 +107,8 @@ flutter:
      - assets/images/background_training_shop1.png
      - assets/images/container_training_shop1.png
      - assets/images/container_training_shop2.png
-     - assets/images/page_1.png
-     - assets/images/page_2.png
+     - assets/icons/page_1.png
+     - assets/icons/page_2.png
      - assets/images/background_training_shop2.png
      - assets/app/logo.png
      - assets/app/loadPage.png
@@ -122,12 +122,12 @@ flutter:
      - assets/app/notificationLogo.png
      - assets/images/top_background.png
      - assets/images/dotted_container.png
-     - assets/images/number_one.png
-     - assets/images/number_two.png
-     - assets/images/number_three.png
+     - assets/icons/number_one.png
+     - assets/icons/number_two.png
+     - assets/icons/number_three.png
      - assets/images/sunset.png
      - assets/images/sunrise.png
-     - assets/images/ads.png
+     - assets/icons/ads.png
   #   - images/a_dot_ham.jpeg
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

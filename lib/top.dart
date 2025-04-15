@@ -143,7 +143,7 @@ class _TopPageState extends State<TopPage> {
                                                     decoration: BoxDecoration(
                                                       image: DecorationImage(
                                                         image: AssetImage(
-                                                            'assets/images/union_grey.png'),
+                                                            'assets/icons/union_grey.png'),
                                                         fit: BoxFit.cover,
                                                       ),
                                                     ),
@@ -260,7 +260,7 @@ class _TopPageState extends State<TopPage> {
                                                           image:
                                                               DecorationImage(
                                                             image: AssetImage(
-                                                                'assets/images/union_grey.png'),
+                                                                'assets/icons/union_grey.png'),
                                                             fit: BoxFit.cover,
                                                           ),
                                                         ),
@@ -371,7 +371,7 @@ class _TopPageState extends State<TopPage> {
                                                     decoration: BoxDecoration(
                                                       image: DecorationImage(
                                                         image: AssetImage(
-                                                            'assets/images/union_grey.png'),
+                                                            'assets/icons/union_grey.png'),
                                                         fit: BoxFit.cover,
                                                       ),
                                                     ),
@@ -566,7 +566,7 @@ class _TopPageState extends State<TopPage> {
                                         decoration: BoxDecoration(
                                           image: DecorationImage(
                                             image: AssetImage(
-                                                'assets/images/number_two.png'),
+                                                'assets/icons/number_two.png'),
                                             fit: BoxFit.cover,
                                           ),
                                         ),
@@ -581,7 +581,7 @@ class _TopPageState extends State<TopPage> {
                                         decoration: BoxDecoration(
                                           image: DecorationImage(
                                             image: AssetImage(
-                                                'assets/images/number_one.png'),
+                                                'assets/icons/number_one.png'),
                                             fit: BoxFit.cover,
                                           ),
                                         ),
@@ -596,7 +596,7 @@ class _TopPageState extends State<TopPage> {
                                         decoration: BoxDecoration(
                                           image: DecorationImage(
                                             image: AssetImage(
-                                                'assets/images/number_three.png'),
+                                                'assets/icons/number_three.png'),
                                             fit: BoxFit.cover,
                                           ),
                                         ),
@@ -716,7 +716,7 @@ class _TopPageState extends State<TopPage> {
                                             decoration: BoxDecoration(
                                               image: DecorationImage(
                                                 image: AssetImage(
-                                                    'assets/images/union_grey.png'),
+                                                    'assets/icons/union_grey.png'),
                                                 fit: BoxFit.cover,
                                               ),
                                             ),
@@ -877,9 +877,7 @@ class _TopPageState extends State<TopPage> {
                           size: AppSizes.width * 0.08,
                         ),
                         onPressed: () {
-                          Route route = MaterialPageRoute(
-                              builder: (context) => BalancePage());
-                          Navigator.pushReplacement(context, route);
+                          Navigator.pop(context);
                         },
                       ),
                     ),

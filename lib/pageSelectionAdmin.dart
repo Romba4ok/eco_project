@@ -2,6 +2,7 @@ import 'package:Eco/add_example.dart';
 import 'package:Eco/add_post.dart';
 import 'package:Eco/add_sponsor.dart';
 import 'package:Eco/appSizes.dart';
+import 'package:Eco/double_back_to_exit.dart';
 import 'package:Eco/edit_post.dart';
 import 'package:Eco/edit_example.dart';
 import 'package:Eco/edit_sponsor.dart';
@@ -71,19 +72,21 @@ class _StatePageSelectionAdmin extends State<PageSelectionAdmin> {
   @override
   Widget build(BuildContext context) {
     AppSizes.init(context);
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      body: Row(
-        children: [
-          _buildSidebar(),
-          Expanded(
-            child: _selectedIndex == 0
-                ? _exampleSubPages[_exampleSubIndex](_onExampleSubPageTapped)
-                : (_selectedIndex == 1
-                    ? _postSubPages[_postSubIndex](_onPostSubPageTapped)
-                    : _pages[_selectedIndex - 2](_onItemTapped)),
-          ),
-        ],
+    return DoubleBackToExitWrapper(
+      child: Scaffold(
+        resizeToAvoidBottomInset: false,
+        body: Row(
+          children: [
+            _buildSidebar(),
+            Expanded(
+              child: _selectedIndex == 0
+                  ? _exampleSubPages[_exampleSubIndex](_onExampleSubPageTapped)
+                  : (_selectedIndex == 1
+                      ? _postSubPages[_postSubIndex](_onPostSubPageTapped)
+                      : _pages[_selectedIndex - 2](_onItemTapped)),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -96,12 +99,14 @@ class _StatePageSelectionAdmin extends State<PageSelectionAdmin> {
         border: Border(right: BorderSide(color: Color(0xFF2A2A2A), width: 2.0)),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.max, // 🔹 Указываем, что Column должен занять максимум
+        mainAxisSize: MainAxisSize.max,
+        // 🔹 Указываем, что Column должен занять максимум
         children: [
           SizedBox(height: AppSizes.height * 0.07),
-          Image.asset('assets/images/union.png'),
+          Image.asset('assets/icons/union.png'),
           SizedBox(height: AppSizes.height * 0.07), // Уменьши отступ
-          Expanded( // 🔹 Растягиваем всё меню
+          Expanded(
+            // 🔹 Растягиваем всё меню
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center, // 🔹 Центрируем
               children: [

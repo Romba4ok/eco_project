@@ -147,7 +147,7 @@ class _AddSponsorPageState extends State<AddSponsorPage> {
                                     decoration: BoxDecoration(
                                       image: DecorationImage(
                                         image:
-                                            AssetImage('assets/images/ads.png'),
+                                            AssetImage('assets/icons/ads.png'),
                                         fit: BoxFit.cover,
                                       ),
                                     ),
@@ -198,7 +198,7 @@ class _AddSponsorPageState extends State<AddSponsorPage> {
                                     decoration: BoxDecoration(
                                       image: DecorationImage(
                                         image:
-                                            AssetImage('assets/images/ads.png'),
+                                            AssetImage('assets/icons/ads.png'),
                                         fit: BoxFit.cover,
                                       ),
                                     ),
@@ -234,7 +234,7 @@ class _AddSponsorPageState extends State<AddSponsorPage> {
                       height: AppSizes.width * 0.09,
                       decoration: BoxDecoration(
                         image: DecorationImage(
-                          image: AssetImage('assets/images/ads.png'),
+                          image: AssetImage('assets/icons/ads.png'),
                           fit: BoxFit.cover,
                         ),
                       ),

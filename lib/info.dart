@@ -27,6 +27,7 @@ class _PageInfoState extends State<PageInfo> {
   List<String> weekdaysRu = ["пн", "вт", "ср", "чт", "пт", "сб", "вс"];
   List<String> days = [];
   int? precipitation;
+  bool hasError = false;
 
   void dataRequest() {
     color = RequestCheck.pollutionLevelColor;
@@ -40,12 +41,22 @@ class _PageInfoState extends State<PageInfo> {
 
   // Метод для обработки разрешений и загрузки данных
   Future<void> handlePermissionCheck() async {
-    await await AppPermission.checkAndRequestLocationPermission();
-    await RequestCheck.init(); // Ожидаем загрузки данных
-    if (mounted) {
-      setState(() {
-        dataRequest();
-      });
+    try {
+      await AppPermission.checkAndRequestLocationPermission();
+      await RequestCheck.init(); // Ожидаем загрузки данных
+      if (mounted) {
+        setState(() {
+          dataRequest();
+        });
+      }
+    } catch (e) {
+      print("Ошибка загрузки: $e");
+      if (mounted) {
+        setState(() {
+          hasError = true;
+          isLoading = false;
+        });
+      }
     }
   }
 
@@ -73,6 +84,26 @@ class _PageInfoState extends State<PageInfo> {
     });
 
     print(days); // Например: ["четверг", "пятница", "суббота"]
+  }
+
+  Future<void> _initializeApp() async {
+    setState(() {
+      isLoading = true;
+      hasError = false;
+    });
+
+    try {
+      await RequestCheck.init(); // или fetchAirQuality
+    } catch (e) {
+      print('Ошибка загрузки: $e');
+      setState(() {
+        hasError = true;
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
@@ -106,6 +137,60 @@ class _PageInfoState extends State<PageInfo> {
       );
     }
 
+    if (hasError) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.wifi_off,
+                size: 100,
+                color: Colors.grey[400],
+              ),
+              SizedBox(height: 20),
+              Text(
+                "Нет подключения к интернету",
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Colors.grey[800],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 8),
+              Text(
+                "Пожалуйста, проверьте соединение и попробуйте снова.",
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: _initializeApp,
+                icon: Icon(Icons.refresh),
+                label: Text("Повторить"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  textStyle: TextStyle(fontSize: 16),
+                  elevation: 4,
+                  shadowColor: Colors.black45,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+    }
+
     return Scaffold(
       body: Stack(
         children: [
@@ -130,16 +215,16 @@ class _PageInfoState extends State<PageInfo> {
                     SizedBox(
                       height: AppSizes.height * 0.05,
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        Route route = MaterialPageRoute(
-                            builder: (context) => RecomendationsPage());
-                        Navigator.push(context, route);
-                      },
-                      child: Container(
-                        child: Row(
-                          children: [
-                            Container(
+                    Container(
+                      child: Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              Route route = MaterialPageRoute(
+                                  builder: (context) => RecomendationsPage());
+                              Navigator.push(context, route);
+                            },
+                            child: Container(
                               width: AppSizes.width * 0.44,
                               height: AppSizes.height * 0.56,
                               decoration: BoxDecoration(
@@ -285,126 +370,125 @@ class _PageInfoState extends State<PageInfo> {
                                 ],
                               ),
                             ),
-                            SizedBox(
-                              width: AppSizes.width * 0.01,
-                            ),
-                            Column(
-                              children: [
-                                Container(
-                                  width: AppSizes.width * 0.44,
-                                  height: AppSizes.height * 0.28,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(20.0),
-                                    color: Color(0xFFFF81F9),
-                                  ),
-                                  child: Padding(
-                                    padding:
-                                        EdgeInsets.all(AppSizes.width * 0.05),
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        // Текст сверху
-                                        Text(
-                                          "Хорошее",
-                                          style: TextStyle(
-                                            color: Colors.purple, // Цвет текста
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: AppSizes.width * 0.05,
-                                          ),
+                          ),
+                          SizedBox(
+                            width: AppSizes.width * 0.01,
+                          ),
+                          Column(
+                            children: [
+                              Container(
+                                width: AppSizes.width * 0.44,
+                                height: AppSizes.height * 0.28,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20.0),
+                                  color: Color(0xFFFF81F9),
+                                ),
+                                child: Padding(
+                                  padding:
+                                      EdgeInsets.all(AppSizes.width * 0.05),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      // Текст сверху
+                                      Text(
+                                        "Хорошее",
+                                        style: TextStyle(
+                                          color: Colors.purple, // Цвет текста
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: AppSizes.width * 0.05,
                                         ),
+                                      ),
 
-                                        Text(
-                                          "O₃ (Озон)",
-                                          style: TextStyle(
-                                            color: Colors.purple,
-                                            fontSize: AppSizes.width * 0.035,
-                                          ),
+                                      Text(
+                                        "O₃ (Озон)",
+                                        style: TextStyle(
+                                          color: Colors.purple,
+                                          fontSize: AppSizes.width * 0.035,
                                         ),
+                                      ),
 
-                                        // Индикатор прогресса
-                                        CircularPercentIndicator(
-                                          radius: AppSizes.width * 0.15,
-                                          // Радиус индикатора
-                                          lineWidth: 12.0,
-                                          // Толщина линии
-                                          percent: 0.15,
-                                          // Процент прогресса (0.0 до 1.0)
-                                          center: Text(
-                                            "15",
-                                            style: TextStyle(
-                                              fontSize: 30,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                          circularStrokeCap:
-                                              CircularStrokeCap.round,
-                                          // Скругленные концы
-                                          backgroundColor: Colors.white,
-                                          // Цвет фона линии
-                                          linearGradient: LinearGradient(
-                                            colors: [
-                                              Colors.purple,
-                                              Colors.deepPurple,
-                                            ],
-                                            begin: Alignment.topCenter,
-                                            end: Alignment.bottomCenter,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(
-                                  height: AppSizes.height * 0.005,
-                                ),
-                                Container(
-                                  height: AppSizes.height * 0.28,
-                                  width: AppSizes.width * 0.44,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(20.0),
-                                    color: Color(0xFFA7EC6A),
-                                  ),
-                                  child: Padding(
-                                    padding:
-                                        EdgeInsets.all(AppSizes.width * 0.05),
-                                    child: Column(
-                                      children: [
-                                        Text(
-                                          "Влажность",
+                                      // Индикатор прогресса
+                                      CircularPercentIndicator(
+                                        radius: AppSizes.width * 0.15,
+                                        // Радиус индикатора
+                                        lineWidth: 12.0,
+                                        // Толщина линии
+                                        percent: 0.15,
+                                        // Процент прогресса (0.0 до 1.0)
+                                        center: Text(
+                                          "15",
                                           style: TextStyle(
-                                            color: Color(0xFF419800),
+                                            fontSize: 30,
                                             fontWeight: FontWeight.bold,
-                                            fontSize: AppSizes.width * 0.05,
+                                            color: Colors.white,
                                           ),
                                         ),
-                                        Text(
-                                          "$humidity%",
-                                          style: TextStyle(
-                                            color: Color(0xFF419800),
-                                            fontSize: AppSizes.width * 0.035,
-                                          ),
+                                        circularStrokeCap:
+                                            CircularStrokeCap.round,
+                                        // Скругленные концы
+                                        backgroundColor: Colors.white,
+                                        // Цвет фона линии
+                                        linearGradient: LinearGradient(
+                                          colors: [
+                                            Colors.purple,
+                                            Colors.deepPurple,
+                                          ],
+                                          begin: Alignment.topCenter,
+                                          end: Alignment.bottomCenter,
                                         ),
-                                        SizedBox(
-                                          height: AppSizes.height * 0.02,
-                                        ),
-                                        Image.asset(
-                                          'assets/images/container3_info.png',
-                                          // Путь к вашему изображению
-                                          width: AppSizes.width * 0.24,
-                                          height: AppSizes.height * 0.13,
-                                          fit: BoxFit
-                                              .cover, // Как изображение должно вписываться
-                                        ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ],
-                            ),
-                          ],
-                        ),
+                              ),
+                              SizedBox(
+                                height: AppSizes.height * 0.005,
+                              ),
+                              Container(
+                                height: AppSizes.height * 0.28,
+                                width: AppSizes.width * 0.44,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20.0),
+                                  color: Color(0xFFA7EC6A),
+                                ),
+                                child: Padding(
+                                  padding:
+                                      EdgeInsets.all(AppSizes.width * 0.05),
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        "Влажность",
+                                        style: TextStyle(
+                                          color: Color(0xFF419800),
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: AppSizes.width * 0.05,
+                                        ),
+                                      ),
+                                      Text(
+                                        "$humidity%",
+                                        style: TextStyle(
+                                          color: Color(0xFF419800),
+                                          fontSize: AppSizes.width * 0.035,
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        height: AppSizes.height * 0.02,
+                                      ),
+                                      Image.asset(
+                                        'assets/images/container3_info.png',
+                                        // Путь к вашему изображению
+                                        width: AppSizes.width * 0.24,
+                                        height: AppSizes.height * 0.13,
+                                        fit: BoxFit
+                                            .cover, // Как изображение должно вписываться
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                     SizedBox(
