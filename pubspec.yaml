@@ -32,7 +32,7 @@ dependencies:
     sdk: flutter
   cupertino_icons:
   http:
-  geolocator:
+  geolocator: ^10.1.0
   permission_handler:
   weather_icons:
   font_awesome_flutter:
@@ -48,7 +48,6 @@ dependencies:
   fl_chart: ^0.63.0
   smooth_page_indicator:
   syncfusion_flutter_gauges:
-
 
 flutter_native_splash:
   background_image: "assets/app/loadPage.png"  # Путь к изображению
@@ -127,6 +126,7 @@ flutter:
      - assets/icons/number_three.png
      - assets/images/sunset.png
      - assets/images/sunrise.png
+     - assets/images/background_editExample.png
      - assets/icons/ads.png
   #   - images/a_dot_ham.jpeg
   # An image asset can refer to one or more resolution-specific "variants", see

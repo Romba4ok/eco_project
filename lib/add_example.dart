@@ -244,11 +244,17 @@ class _AddExamplePageState extends State<AddExamplePage> {
     int minutes = duration.inMinutes % 60;
 
     List<String> parts = [];
-    if (days > 0) parts.add("$days д.");
-    if (hours > 0) parts.add("$hours ч.");
-    if (minutes > 0) parts.add("$minutes м.");
+    if (days > 0 && days < 10) parts.add("0$days:");
+    else if (days > 9) parts.add("$days:");
+    else parts.add('00:');
+    if (hours > 0 && hours < 10) parts.add("0$hours:");
+    else if (hours > 9) parts.add("$hours:");
+    else parts.add('00:');
+    if (minutes > 0 && minutes < 10) parts.add("0$minutes");
+    else if (minutes > 9) parts.add("$minutes");
+    else parts.add('00');
 
-    return parts.isNotEmpty ? parts.join(" ") : "Не выбрано";
+    return parts.isNotEmpty ? parts.join("") : "Не выбрано";
   }
 
   String? titleValidator(String? value) {
@@ -769,13 +775,21 @@ class _AddExamplePageState extends State<AddExamplePage> {
                               onPressed: () async {
                                 if (_formKey.currentState!.validate()) {
                                   final now = DateTime.now();
-                                  final expiresAt = taskDuration != null ? now.add(taskDuration!) : DateTime.now();
+                                  final expiresAt = taskDuration != null
+                                      ? now.add(taskDuration!)
+                                      : null;
 
                                   final title = titleController.text.trim();
-                                  final description = descriptionController.text.trim();
-                                  final coins = int.tryParse(coinsController.text.trim()) ?? 0;
-                                  final experience = int.tryParse(experienceController.text.trim()) ?? 0;
-                                  final special = taskDuration != null ? 'special' : '';
+                                  final description =
+                                      descriptionController.text.trim();
+                                  final coins = int.tryParse(
+                                          coinsController.text.trim()) ??
+                                      0;
+                                  final experience = int.tryParse(
+                                          experienceController.text.trim()) ??
+                                      0;
+                                  final special =
+                                      taskDuration != null ? 'special' : '';
 
                                   DatabaseService service = DatabaseService();
 
@@ -787,12 +801,15 @@ class _AddExamplePageState extends State<AddExamplePage> {
                                     time: expiresAt,
                                     coins: coins,
                                     experience: experience,
+                                    sponsor: '',
                                   );
 
                                   if (error == null) {
                                     // Успех
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text("Задание успешно добавлено")),
+                                      SnackBar(
+                                          content: Text(
+                                              "Задание успешно добавлено")),
                                     );
                                     titleController.clear();
                                     descriptionController.clear();
@@ -801,10 +818,10 @@ class _AddExamplePageState extends State<AddExamplePage> {
                                     setState(() {
                                       taskDuration = null;
                                     });
+                                    widget.togglePage(1);
                                   } else {
-                                   print(error);
+                                    print(error);
                                     ScaffoldMessenger.of(context).showSnackBar(
-
                                       SnackBar(content: Text("Ошибка: $error")),
                                     );
                                   }

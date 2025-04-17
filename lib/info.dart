@@ -28,6 +28,7 @@ class _PageInfoState extends State<PageInfo> {
   List<String> days = [];
   int? precipitation;
   bool hasError = false;
+  RequestCheck requestCheck = RequestCheck();
 
   void dataRequest() {
     color = RequestCheck.pollutionLevelColor;
@@ -391,7 +392,7 @@ class _PageInfoState extends State<PageInfo> {
                                     children: [
                                       // Текст сверху
                                       Text(
-                                        "Хорошее",
+                                        '${requestCheck.getPressureStatus(RequestCheck.pressure ?? 1013.0)}',
                                         style: TextStyle(
                                           color: Colors.purple, // Цвет текста
                                           fontWeight: FontWeight.bold,
@@ -400,10 +401,10 @@ class _PageInfoState extends State<PageInfo> {
                                       ),
 
                                       Text(
-                                        "O₃ (Озон)",
+                                        "Давление воздуха",
                                         style: TextStyle(
-                                          color: Colors.purple,
-                                          fontSize: AppSizes.width * 0.035,
+                                          color: Colors.white,
+                                          fontSize: AppSizes.width * 0.05,
                                         ),
                                       ),
 
@@ -413,10 +414,10 @@ class _PageInfoState extends State<PageInfo> {
                                         // Радиус индикатора
                                         lineWidth: 12.0,
                                         // Толщина линии
-                                        percent: 0.15,
+                                        percent: ((RequestCheck.pressure!.toInt() - 950) / (1050 - 950)).clamp(0.0, 1.0),
                                         // Процент прогресса (0.0 до 1.0)
                                         center: Text(
-                                          "15",
+                                          '${RequestCheck.pressure?.toInt()}',
                                           style: TextStyle(
                                             fontSize: 30,
                                             fontWeight: FontWeight.bold,

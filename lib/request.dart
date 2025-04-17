@@ -39,6 +39,7 @@ class RequestCheck {
   static DateTime? sunsetTime;
   static List<double> windSpeedList = [];
   static List<(IconData icon, String text, Color color)> recommendations = [];
+  static double? pressure;
 
   static Future<void> init() async {
     loading = false;
@@ -85,6 +86,7 @@ class RequestCheck {
       temperature = jsonData['data']['current']['weather']['tp'].toString();
       humidity = jsonData['data']['current']['weather']['hu'].toString();
       iconRequest = jsonData['data']['current']['weather']['ic'].toString();
+      pressure = jsonData['data']['current']['weather']['pr'].toDouble();
       print(jsonData);
 
       DateTime now = DateTime.now();
@@ -177,11 +179,6 @@ class RequestCheck {
       String formattedSunrise = DateFormat('HH:mm').format(sunriseTime!);
       String formattedSunset = DateFormat('HH:mm').format(sunsetTime!);
 
-      // Вывод в консоль
-      print("📍 Город: $cityName, Страна: $country");
-      print("🌅 Рассвет (локальное время): $formattedSunrise");
-      print("🌇 Закат (локальное время): $formattedSunset");
-
       // Границы дня
       sunrise = sunriseTime!.hour;
       sunset = sunsetTime!.hour;
@@ -189,11 +186,6 @@ class RequestCheck {
         double windSpeed = (forecastItem['wind']['speed'] as num).toDouble();
         windSpeedList
             .add(windSpeed); // Добавляем строку с информацией о скорости ветра
-      }
-
-      print("Wind Speed List:");
-      for (var windSpeed in windSpeedList) {
-        print(windSpeed); // Выводим все элементы списка
       }
 
       // Очистка списков перед записью новых данных
@@ -251,8 +243,6 @@ class RequestCheck {
         DateTime localTime = DateTime.fromMillisecondsSinceEpoch(
             (forecast[i]['dt'] + timeZoneOffset) * 1000);
         int localHour = localTime.hour;
-        print(sunrise);
-        print(sunset);
 
         // Определяем день или ночь
         bool isDay = localHour > sunrise + 5 && localHour < sunset + 5;
@@ -274,12 +264,6 @@ class RequestCheck {
           nightIcons.last.add(icons[i]);
         }
       }
-
-      // Вывод в консоль
-      print("🌞 Дневные температуры: $dayTemperatures");
-      print("🌙 Ночные температуры: $nightTemperatures");
-      print("🌞 Дневные иконки: $dayIcons");
-      print("🌙 Ночные иконки: $nightIcons");
 
       // Обработка влажности по дням
       himiditeesDays.clear();
@@ -462,45 +446,116 @@ class RequestCheck {
   static getRecommendation() {
     if (pollutionLevel >= 0 && pollutionLevel <= 50) {
       recommendations = [
-        (Icons.sports, 'Наслаждайтесь активным отдыхом на улице', Color(0xFF00FF00)),
-        (Icons.window, 'Откройте окна,чтобы впустить  в помещение\nчистый и  воздух', Color(0xFF00FF00)),
+        (
+          Icons.sports,
+          'Наслаждайтесь активным отдыхом на улице',
+          Color(0xFF00FF00)
+        ),
+        (
+          Icons.window,
+          'Откройте окна,чтобы впустить  в помещение\nчистый и  воздух',
+          Color(0xFF00FF00)
+        ),
       ];
     } else if (pollutionLevel > 50 && pollutionLevel <= 100) {
       recommendations = [
-        (Icons.sports, 'Людям, имеющим повышенную чувствительность,\nследует сократить занятия спортом на открытом\nвоздухе', Color(0xFFFFFF00)),
-        (Icons.window, 'Закройте окна,чтобы избежать грязного\nнаружного воздуха', Color(0xFFFFFF00)),
-        (Icons.air, 'Людям с повышенной чувствительностью следует\nиспользовать очиститель воздуха', Color(0xFFFFFF00)),
-        (Icons.masks, 'Чувствительные группы должны носить маску на\nоткрытом воздухе', Color(0xFFFFFF00)),
+        (
+          Icons.sports,
+          'Людям, имеющим повышенную чувствительность,\nследует сократить занятия спортом на открытом\nвоздухе',
+          Color(0xFFFFFF00)
+        ),
+        (
+          Icons.window,
+          'Закройте окна,чтобы избежать грязного\nнаружного воздуха',
+          Color(0xFFFFFF00)
+        ),
+        (
+          Icons.air,
+          'Людям с повышенной чувствительностью следует\nиспользовать очиститель воздуха',
+          Color(0xFFFFFF00)
+        ),
+        (
+          Icons.masks,
+          'Чувствительные группы должны носить маску на\nоткрытом воздухе',
+          Color(0xFFFFFF00)
+        ),
       ];
     } else if (pollutionLevel > 100 && pollutionLevel <= 150) {
       recommendations = [
-        (Icons.sports, 'Уменьшите физические нагрузки на свежем\nвоздухе', Color(0xFFFFA500)),
-        (Icons.window, 'Закройте окна,чтобы избежать грязного\nнаружного воздуха', Color(0xFFFFA500)),
+        (
+          Icons.sports,
+          'Уменьшите физические нагрузки на свежем\nвоздухе',
+          Color(0xFFFFA500)
+        ),
+        (
+          Icons.window,
+          'Закройте окна,чтобы избежать грязного\nнаружного воздуха',
+          Color(0xFFFFA500)
+        ),
         (Icons.air, 'Запустите очиститель воздуха ', Color(0xFFFFA500)),
-        (Icons.masks, 'Чувствительные группы должны носить маску на\nоткрытом воздухе', Color(0xFFFFA500)),
+        (
+          Icons.masks,
+          'Чувствительные группы должны носить маску на\nоткрытом воздухе',
+          Color(0xFFFFA500)
+        ),
       ];
     } else if (pollutionLevel > 150 && pollutionLevel <= 200) {
       recommendations = [
-        (Icons.sports, 'Избегайте тренировок на свежем воздухе ', Color(0xFFFF0000)),
-        (Icons.window, 'Закройте окна,чтобы избежать грязного\nнаружного воздуха', Color(0xFFFF0000)),
+        (
+          Icons.sports,
+          'Избегайте тренировок на свежем воздухе ',
+          Color(0xFFFF0000)
+        ),
+        (
+          Icons.window,
+          'Закройте окна,чтобы избежать грязного\nнаружного воздуха',
+          Color(0xFFFF0000)
+        ),
         (Icons.air, 'Запустите очиститель воздуха  ', Color(0xFFFF0000)),
         (Icons.masks, 'Носите маску на открытом воздухе', Color(0xFFFF0000)),
       ];
     } else if (pollutionLevel > 200 && pollutionLevel <= 300) {
       recommendations = [
-        (Icons.sports, 'Избегайте тренировок на свежем воздухе ', Color(0xFF800080)),
-        (Icons.window, 'Закройте окна,чтобы избежать грязного\nнаружного воздуха', Color(0xFF800080)),
+        (
+          Icons.sports,
+          'Избегайте тренировок на свежем воздухе ',
+          Color(0xFF800080)
+        ),
+        (
+          Icons.window,
+          'Закройте окна,чтобы избежать грязного\nнаружного воздуха',
+          Color(0xFF800080)
+        ),
         (Icons.air, 'Запустите очиститель воздуха ', Color(0xFF800080)),
         (Icons.masks, 'Носите маску на открытом воздухе', Color(0xFF800080)),
       ];
     } else {
       recommendations = [
-        (Icons.sports, 'Избегайте тренировок на свежем воздухе ', Color(0xFF4B0082)),
-        (Icons.window, 'Закройте окна,чтобы избежать грязного\nнаружного воздуха', Color(0xFF4B0082)),
+        (
+          Icons.sports,
+          'Избегайте тренировок на свежем воздухе ',
+          Color(0xFF4B0082)
+        ),
+        (
+          Icons.window,
+          'Закройте окна,чтобы избежать грязного\nнаружного воздуха',
+          Color(0xFF4B0082)
+        ),
         (Icons.air, 'Запустите очиститель воздуха', Color(0xFF4B0082)),
         (Icons.masks, 'Носите маску на открытом воздухе', Color(0xFF4B0082)),
       ];
     }
   }
-}
 
+  String getPressureStatus(double pressure) {
+    if (pressure < 980) {
+      return 'Низкое';
+    } else if (pressure < 1000) {
+      return 'Ниже нормы';
+    } else if (pressure <= 1030) {
+      return 'Хорошее';
+    } else {
+      return'Высокое';
+    }
+  }
+}

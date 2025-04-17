@@ -52,7 +52,8 @@ class DatabaseService {
 
         final response = await _supabase
             .from('users')
-            .select('user, name, email, state, city, avatar, balance, rank_user, select_rank')
+            .select(
+                'user, name, email, state, city, avatar, balance, rank_user, select_rank')
             .eq('id', user.id)
             .single();
         print(response);
@@ -169,7 +170,8 @@ class DatabaseService {
       // Получаем всех пользователей, отсортированных по балансу (по убыванию)
       final usersResponse = await _supabase
           .from('users')
-          .select('id, name, email, password, state, city, avatar, user, rank_user, balance')
+          .select(
+              'id, name, email, password, state, city, avatar, user, rank_user, balance')
           .order('balance', ascending: false);
 
       if (usersResponse.isEmpty) {
@@ -187,9 +189,8 @@ class DatabaseService {
       }
 
       // Получаем данные конкретного пользователя
-      final response = await _supabase.from('users').select()
-          .eq('id', userId)
-          .single();
+      final response =
+          await _supabase.from('users').select().eq('id', userId).single();
 
       if (response != null) {
         userRole = response['user'];
@@ -202,7 +203,7 @@ class DatabaseService {
         balance = response['balance']; // balance остается int
         userRank = response['rank_user'];
         selectRank = response['select_rank'];
-        userPosition = position;// rank остается int
+        userPosition = position; // rank остается int
 
         return {
           'name': response['name'] as String? ?? '',
@@ -215,7 +216,9 @@ class DatabaseService {
           'user': response['user'] as String? ?? '',
           'rank_user': response['rank_user'] as String? ?? '',
           'select_rank': response['select_rank'] as String? ?? '',
-          'balance': response['balance'] != null ? response['balance'].toString() : '0',
+          'balance': response['balance'] != null
+              ? response['balance'].toString()
+              : '0',
           'position': position?.toString() ?? '0', // Добавлено: место в топе
         };
       } else {
@@ -228,14 +231,12 @@ class DatabaseService {
     }
   }
 
-  Future<void> savePost(File image, String heading, String source,
-      String content) async {
+  Future<void> savePost(
+      File image, String heading, String source, String content) async {
     try {
       // Шаг 1: Загрузка изображения в Supabase Storage
       final fileName =
-          'post_images/${DateTime
-          .now()
-          .millisecondsSinceEpoch}.png'; // Уникальное имя файла
+          'post_images/${DateTime.now().millisecondsSinceEpoch}.png'; // Уникальное имя файла
       await _supabase.storage
           .from('posts') // Папка "posts" в Storage
           .upload(fileName, image);
@@ -271,8 +272,11 @@ class DatabaseService {
   }) async {
     try {
       // Проверяем существование поста
-      final postData = await _supabase.from('posts').select('image').eq(
-          'id', postId).single();
+      final postData = await _supabase
+          .from('posts')
+          .select('image')
+          .eq('id', postId)
+          .single();
       if (postData == null) {
         print('Ошибка: Пост не найден.');
         return;
@@ -296,27 +300,27 @@ class DatabaseService {
           print('Изображение не изменилось, обновление не требуется.');
         } else {
           // Загружаем новое изображение перед удалением старого
-          final newFileName = 'post_images/${DateTime
-              .now()
-              .millisecondsSinceEpoch}.png';
-          final uploadResponse = await _supabase.storage.from('posts').upload(
-              newFileName, newImage);
+          final newFileName =
+              'post_images/${DateTime.now().millisecondsSinceEpoch}.png';
+          final uploadResponse = await _supabase.storage
+              .from('posts')
+              .upload(newFileName, newImage);
 
           if (uploadResponse.isEmpty) {
             throw Exception('Ошибка при загрузке нового изображения.');
           }
 
           // Получаем новый URL изображения
-          final newImageUrl = _supabase.storage.from('posts').getPublicUrl(
-              newFileName);
+          final newImageUrl =
+              _supabase.storage.from('posts').getPublicUrl(newFileName);
           updatedData['image'] = newImageUrl;
 
           // Удаление старого изображения
           if (currentImageUrl != null && currentImageUrl.isNotEmpty) {
             try {
               final filePath = _getStoragePath(currentImageUrl);
-              final deleteResponse = await _supabase.storage.from('posts')
-                  .remove([filePath]);
+              final deleteResponse =
+                  await _supabase.storage.from('posts').remove([filePath]);
 
               if (deleteResponse.isNotEmpty) {
                 print('Старое изображение успешно удалено.');
@@ -348,7 +352,6 @@ class DatabaseService {
     return uri.path.replaceFirst('/storage/v1/object/public/posts/', '');
   }
 
-
   Future<void> updateUser({
     String? name,
     String? city,
@@ -377,8 +380,9 @@ class DatabaseService {
       // Обновление пароля в Auth
       if (password != null && password.isNotEmpty) {
         await _supabase.auth.updateUser(UserAttributes(password: password));
-        await _supabase.from('users').update({'password': password}).eq(
-            'id', userId);
+        await _supabase
+            .from('users')
+            .update({'password': password}).eq('id', userId);
         print('Пароль успешно обновлен.');
       }
       print('Пароль успешно обновлен в базе данных.');
@@ -386,8 +390,11 @@ class DatabaseService {
       // Работа с аватаркой
       if (newAvatar != null) {
         // Получаем текущий URL аватарки из Realtime Database
-        final userData = await _supabase.from('users').select('avatar').eq(
-            'id', userId).single();
+        final userData = await _supabase
+            .from('users')
+            .select('avatar')
+            .eq('id', userId)
+            .single();
         final currentAvatar = userData['avatar'] as String?;
 
         // Если новая аватарка совпадает с текущей, обновление не требуется
@@ -397,32 +404,31 @@ class DatabaseService {
         }
 
         // Загрузка новой аватарки перед удалением старой
-        final newFileName = 'avatars_images/${DateTime
-            .now()
-            .millisecondsSinceEpoch}.png';
-        final uploadResponse = await _supabase.storage.from('avatars').upload(
-            newFileName, newAvatar);
+        final newFileName =
+            'avatars_images/${DateTime.now().millisecondsSinceEpoch}.png';
+        final uploadResponse = await _supabase.storage
+            .from('avatars')
+            .upload(newFileName, newAvatar);
 
         if (uploadResponse.isEmpty) {
           throw Exception('Ошибка при загрузке новой аватарки.');
         }
 
         // Получаем публичный URL новой аватарки
-        final newAvatarUrl = _supabase.storage.from('avatars').getPublicUrl(
-            newFileName);
+        final newAvatarUrl =
+            _supabase.storage.from('avatars').getPublicUrl(newFileName);
 
         // Удаление старой аватарки (если она существует)
         if (currentAvatar != null && currentAvatar.isNotEmpty) {
           try {
             final uri = Uri.parse(currentAvatar);
-            final filePath = uri.path.replaceFirst(
-                '/storage/v1/object/public/avatars/', '');
-
+            final filePath =
+                uri.path.replaceFirst('/storage/v1/object/public/avatars/', '');
 
             print('Удаление старой аватарки: $filePath');
 
-            final deleteResponse = await _supabase.storage.from('avatars')
-                .remove([filePath]);
+            final deleteResponse =
+                await _supabase.storage.from('avatars').remove([filePath]);
 
             if (deleteResponse.isNotEmpty) {
               print('Старая аватарка успешно удалена.');
@@ -435,8 +441,9 @@ class DatabaseService {
         }
 
         // Обновляем ссылку на новую аватарку в Realtime Database
-        await _supabase.from('users').update({'avatar': newAvatarUrl}).eq(
-            'id', userId);
+        await _supabase
+            .from('users')
+            .update({'avatar': newAvatarUrl}).eq('id', userId);
 
         print('Аватарка успешно обновлена.');
       }
@@ -461,7 +468,9 @@ class DatabaseService {
 
     int? selectedRank = int.tryParse(selectRank);
 
-    if (selectedRank == null || selectedRank < 0 || selectedRank >= Titles.titles.length) {
+    if (selectedRank == null ||
+        selectedRank < 0 ||
+        selectedRank >= Titles.titles.length) {
       return null;
     }
 
@@ -470,7 +479,6 @@ class DatabaseService {
     return Titles.titles[selectedRank];
   }
 
-
   Future<List<Map<String, dynamic>>> fetchLeaderboard() async {
     print("🔍 Отправляем запрос в Supabase...");
 
@@ -478,7 +486,8 @@ class DatabaseService {
 
     final response = await supabase
         .from('users')
-        .select('id, avatar, name, balance, select_rank') // Используем select_rank
+        .select(
+            'id, avatar, name, balance, select_rank') // Используем select_rank
         .order('balance', ascending: false);
 
     print("📩 Ответ из Supabase: $response");
@@ -493,12 +502,15 @@ class DatabaseService {
       final user = entry.value;
 
       final int rank = index + 1;
-      final int balance = _parseBalance(user['balance']); // Конвертируем balance
-      final int? selectedRank = int.tryParse(user['select_rank']?.toString() ?? '-1'); // Используем select_rank
+      final int balance =
+          _parseBalance(user['balance']); // Конвертируем balance
+      final int? selectedRank = int.tryParse(
+          user['select_rank']?.toString() ?? '-1'); // Используем select_rank
 
       // Проверяем, есть ли такой титул в Titles.titles
-      Map<String, dynamic>? badge =
-      (selectedRank != null && selectedRank >= 0 && selectedRank < Titles.titles.length)
+      Map<String, dynamic>? badge = (selectedRank != null &&
+              selectedRank >= 0 &&
+              selectedRank < Titles.titles.length)
           ? Titles.titles[selectedRank]
           : null;
 
@@ -508,12 +520,13 @@ class DatabaseService {
         'balance': balance,
         'avatar': user['avatar'] ?? '',
         'badge': badge?['name'],
-        'badgeGradient': badge?['color'],  // Исправлено с gradient на color
-        'badgeTextGradient': badge?['colorText'],  // Исправлено с textGradient на colorText
+        'badgeGradient': badge?['color'],
+        // Исправлено с gradient на color
+        'badgeTextGradient': badge?['colorText'],
+        // Исправлено с textGradient на colorText
       };
     }).toList();
   }
-
 
   int _parseBalance(dynamic balance) {
     if (balance == null) return 0;
@@ -525,7 +538,9 @@ class DatabaseService {
   Future<void> updateUserSelectRank(String userId, int selectedRank) async {
     try {
       // Обновляем пользователя в БД, заменяя select_rank на новый индекс
-      await _supabase.from('users').update({'select_rank': selectedRank.toString()}).eq('id', userId);
+      await _supabase
+          .from('users')
+          .update({'select_rank': selectedRank.toString()}).eq('id', userId);
     } catch (e) {
       print('Ошибка при обновлении select_rank: $e');
     }
@@ -535,19 +550,166 @@ class DatabaseService {
     required String title,
     required String description,
     required String special,
-    required DateTime time,
+    required DateTime? time,
     required int coins,
     required int experience,
+    required String sponsor,
   }) async {
+    final response = await _supabase.from('examples').insert({
+      'title': title,
+      'description': description,
+      'special': special,
+      'time': time == null ? null : time.toIso8601String(),
+      'coins': coins,
+      'experience': experience,
+      'sponsor': sponsor,
+    });
+  }
 
-      final response = await _supabase.from('examples').insert({
-        'title': title,
-        'description': description,
-        'special': special,
-        'time': time.toIso8601String(),
-        'coins': coins,
-        'experience': experience,
-      });
+  Future<List<Map<String, String>>> fetchExamples() async {
+    try {
+      final response = await _supabase.from('examples').select();
 
+      if (response != null && response is List) {
+        return response.where((e) {
+          final sponsor = e['sponsor'];
+          return sponsor == null || sponsor.toString().trim().isEmpty;
+        }).map((e) {
+          return {
+            'id': e['id'].toString(),
+            'title': e['title']?.toString() ?? '',
+            'description': e['description']?.toString() ?? '',
+            'special': e['special']?.toString() ?? '',
+            'time': e['time']?.toString() ?? '',
+            'coins': e['coins']?.toString() ?? '',
+            'experience': e['experience']?.toString() ?? '',
+            'sponsor': e['sponsor']?.toString() ?? '',
+          };
+        }).toList();
+      } else {
+        print('Ошибка: Пустой ответ от Supabase');
+        return [];
+      }
+    } catch (e) {
+      print('Ошибка при загрузке данных: $e');
+      return [];
+    }
+  }
+
+  Future<List<Map<String, String>>> fetchExamplesSponsors() async {
+    try {
+      final response = await _supabase.from('examples').select();
+
+      if (response != null && response is List) {
+        return response.where((e) {
+          final sponsor = e['sponsor'];
+          return sponsor.toString().trim().isNotEmpty;
+        }).map((e) {
+          return {
+            'id': e['id'].toString(),
+            'title': e['title']?.toString() ?? '',
+            'description': e['description']?.toString() ?? '',
+            'special': e['special']?.toString() ?? '',
+            'time': e['time']?.toString() ?? '',
+            'coins': e['coins']?.toString() ?? '',
+            'experience': e['experience']?.toString() ?? '',
+            'sponsor': e['sponsor']?.toString() ?? '',
+          };
+        }).toList();
+      } else {
+        print('Ошибка: Пустой ответ от Supabase');
+        return [];
+      }
+    } catch (e) {
+      print('Ошибка при загрузке данных: $e');
+      return [];
+    }
+  }
+
+  String getTimeLeft(String rawTime) {
+    final now = DateTime.now().toUtc();
+    final targetTime = DateTime.parse(rawTime);
+    final difference = targetTime.difference(now);
+
+    if (difference.isNegative) {
+      return "Истекло";
+    }
+
+    final days = difference.inDays;
+    final hours = difference.inHours % 24;
+    final minutes = difference.inMinutes % 60;
+
+    String result = "";
+
+    if (days > 9)
+      result += "$days:";
+    else if (days < 10)
+      result += "0$days:";
+    else
+      result += '00:';
+    if (hours > 9)
+      result += "$hours:";
+    else if (hours < 10)
+      result += "0$hours:";
+    else
+      result += '00:';
+    if (minutes > 9)
+      result += "$minutes";
+    else if (minutes < 10)
+      result += "0$minutes";
+    else
+      result += '00';
+    if (days == 0 && hours == 0 && minutes == 0) {
+      result += "меньше минуты";
+    }
+    return result.trim();
+  }
+
+  Future<void> deleteExample(int postId) async {
+    try {
+      await _supabase.from('examples').delete().eq('id', postId);
+    } catch (error) {
+      print('Ошибка при удалении поста: $error');
+    }
+  }
+
+  Future<void> updateExample({
+    required int postId,
+    String? newTitle,
+    String? newDescription,
+    String? newSpecial,
+    DateTime? newTime,
+    int? newCoins,
+    int? newExperience,
+    String? newSponsor,
+  }) async {
+    try {
+      Map<String, dynamic> updatedData = {};
+
+      updatedData['title'] = newTitle;
+
+      updatedData['description'] = newDescription;
+
+      updatedData['special'] = newSpecial;
+
+      if (newTime != null) updatedData['time'] = newTime.toIso8601String();
+      else updatedData['time'] = null;
+
+      updatedData['coins'] = newCoins;
+
+      updatedData['experience'] = newExperience;
+
+      updatedData['sponsor'] = newSponsor;
+
+      // Обновление поста в базе данных
+      if (updatedData.isNotEmpty) {
+        await _supabase.from('examples').update(updatedData).eq('id', postId);
+        print('Пост успешно обновлен.');
+      } else {
+        print('Нет изменений для обновления.');
+      }
+    } catch (e) {
+      print('Ошибка при обновлении поста: $e');
+    }
   }
 }

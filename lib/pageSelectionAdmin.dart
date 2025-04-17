@@ -1,10 +1,14 @@
 import 'package:Eco/add_example.dart';
 import 'package:Eco/add_post.dart';
+import 'package:Eco/add_shop.dart';
+import 'package:Eco/add_shop_sponsor.dart';
 import 'package:Eco/add_sponsor.dart';
 import 'package:Eco/appSizes.dart';
 import 'package:Eco/double_back_to_exit.dart';
 import 'package:Eco/edit_post.dart';
 import 'package:Eco/edit_example.dart';
+import 'package:Eco/edit_shop.dart';
+import 'package:Eco/edit_shop_sponsor.dart';
 import 'package:Eco/edit_sponsor.dart';
 import 'package:Eco/pageSelection.dart';
 import 'package:Eco/shop_admin.dart';
@@ -23,6 +27,7 @@ class _StatePageSelectionAdmin extends State<PageSelectionAdmin> {
   int _selectedIndex = 0;
   int _postSubIndex = 0;
   int _exampleSubIndex = 0;
+  int _shopSubIndex = 0;
   final DatabaseService _databaseService = DatabaseService();
 
   final List<Widget Function(Function(int))> _postSubPages = [
@@ -35,6 +40,13 @@ class _StatePageSelectionAdmin extends State<PageSelectionAdmin> {
     (togglePage) => EditExamplePage(togglePage: togglePage),
     (togglePage) => AddSponsorPage(togglePage: togglePage),
     (togglePage) => EditSponsorPage(togglePage: togglePage),
+  ];
+
+  final List<Widget Function(Function(int))> _shopSubPages = [
+        (togglePage) => AddShopPage(togglePage: togglePage),
+        (togglePage) => EditShopPage(togglePage: togglePage),
+        (togglePage) => AddShopSponsorPage(togglePage: togglePage),
+        (togglePage) => EditShopSponsorPage(togglePage: togglePage),
   ];
 
   final List<Widget Function(Function(int))> _pages = [
@@ -69,6 +81,13 @@ class _StatePageSelectionAdmin extends State<PageSelectionAdmin> {
     });
   }
 
+  void _onShopSubPageTapped(int index) {
+    setState(() {
+      _selectedIndex = 3;
+      _shopSubIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     AppSizes.init(context);
@@ -82,8 +101,10 @@ class _StatePageSelectionAdmin extends State<PageSelectionAdmin> {
               child: _selectedIndex == 0
                   ? _exampleSubPages[_exampleSubIndex](_onExampleSubPageTapped)
                   : (_selectedIndex == 1
-                      ? _postSubPages[_postSubIndex](_onPostSubPageTapped)
-                      : _pages[_selectedIndex - 2](_onItemTapped)),
+                  ? _postSubPages[_postSubIndex](_onPostSubPageTapped)
+                  : (_selectedIndex == 3
+                  ? _shopSubPages[_shopSubIndex](_onShopSubPageTapped)
+                  : _pages[_selectedIndex - 2](_onItemTapped))),
             ),
           ],
         ),

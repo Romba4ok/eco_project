@@ -30,7 +30,6 @@ class _StatePageSelection extends State<PageSelection> {
   void initState() {
     super.initState();
     _initializeApp();
-    // checkUser(); // Убираем checkUser из initState, чтобы он запускался только при переходе на экран профиля
   }
 
   Future<void> _initializeApp() async {
