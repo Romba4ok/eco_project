@@ -6,6 +6,7 @@ import 'package:Eco/shop.dart';
 import 'package:Eco/supabase_config.dart';
 import 'package:Eco/titles.dart';
 import 'package:Eco/top.dart';
+import 'package:Eco/top_experience.dart';
 import 'package:Eco/training_examples1.dart';
 import 'package:Eco/training_shop1.dart';
 import 'package:flutter/cupertino.dart';
@@ -24,6 +25,7 @@ class BalancePage extends StatefulWidget {
 class _BalancePageState extends State<BalancePage> {
   String name = DatabaseService.userName ?? 'Загрузка';
   int position = DatabaseService.userPosition ?? 0;
+  int totalExp =  DatabaseService.experience ?? 0;
   final SupabaseClient supabase = Supabase.instance.client;
   final DatabaseService _databaseService = DatabaseService();
   bool isLoading = true;
@@ -58,6 +60,8 @@ class _BalancePageState extends State<BalancePage> {
           name = fetchedUser?['name'] ?? 'Загрузка';
           rank = fetchedUser?['rank_user'] ?? '0';
           position = int.tryParse(fetchedUser?['position'] ?? '0') ?? 0;
+          totalExp = int.tryParse(fetchedUser?['experience'] ?? '0') ?? 0;
+          _databaseService.updateUserRanksByExperience(totalExp);
           isLoading = false;
           print(badge);
 
@@ -92,9 +96,9 @@ class _BalancePageState extends State<BalancePage> {
     bool hasSeenOnboarding = prefs.getBool('examples_page') ?? false;
 
     if (!hasSeenOnboarding) {
-      await prefs.setBool(
-          'examples_page', true);
-      Route route = MaterialPageRoute(builder: (context) => TrainingExamples1());
+      await prefs.setBool('examples_page', true);
+      Route route =
+          MaterialPageRoute(builder: (context) => TrainingExamples1());
       Navigator.push(context, route);
     } else {
       Route route = MaterialPageRoute(builder: (context) => ExamplesPage());
@@ -104,7 +108,11 @@ class _BalancePageState extends State<BalancePage> {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: implement build
+    const int expPerLevel = 10000;
+    int currentLevel = (totalExp ~/ expPerLevel);
+    int nextLevel = currentLevel + 1;
+    int expInCurrentLevel = totalExp % expPerLevel;
+    double progress = expInCurrentLevel / expPerLevel;
     return Scaffold(
       body: isLoading
           ? Container(
@@ -141,7 +149,7 @@ class _BalancePageState extends State<BalancePage> {
                         children: [
                           Container(
                             width: AppSizes.width,
-                            height: AppSizes.height * 0.6,
+                            height: AppSizes.height * 0.65,
                             decoration: BoxDecoration(
                               image: DecorationImage(
                                 image: AssetImage(
@@ -204,9 +212,8 @@ class _BalancePageState extends State<BalancePage> {
                                       child: GestureDetector(
                                         onTap: () {
                                           Route route = MaterialPageRoute(
-                                              builder: (context) => TopPage());
-                                          Navigator.push(
-                                              context, route);
+                                              builder: (context) => TopExperiencePage());
+                                          Navigator.push(context, route);
                                         },
                                         child: Center(
                                           child: Text(
@@ -220,7 +227,7 @@ class _BalancePageState extends State<BalancePage> {
                                         ),
                                       ),
                                     ),
-                                    SizedBox(width: AppSizes.width * 0.01),
+                                    SizedBox(width: AppSizes.width * 0.04),
                                     GestureDetector(
                                       onTap: () {
                                         showCustomDialog(context, rank);
@@ -277,12 +284,122 @@ class _BalancePageState extends State<BalancePage> {
                                     ),
                                   ],
                                 ),
+                                SizedBox(
+                                  height: AppSizes.height * 0.01,
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: AppSizes.width * 0.15),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        'LVL $currentLevel',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: AppSizes.width * 0.055,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      SizedBox(height: AppSizes.height * 0.01),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          // Текущий уровень слева
+                                          Container(
+                                            width: AppSizes.width * 0.09,
+                                            height: AppSizes.height * 0.04,
+                                            alignment: Alignment.center,
+                                            decoration: BoxDecoration(
+                                              color: Colors.lightGreen,
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Text(
+                                              '$currentLevel',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+
+                                          SizedBox(
+                                              width: AppSizes.width * 0.02),
+
+                                          // Прогресс бар
+                                          Flexible(
+                                            child: Stack(
+                                              children: [
+                                                Container(
+                                                  height:
+                                                      AppSizes.height * 0.04,
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.black,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            20),
+                                                  ),
+                                                ),
+                                                FractionallySizedBox(
+                                                  widthFactor: progress,
+                                                  // значение от 0.0 до 1.0
+                                                  child: Container(
+                                                    height:
+                                                        AppSizes.height * 0.04,
+                                                    decoration: BoxDecoration(
+                                                      gradient: LinearGradient(
+                                                        colors: [
+                                                          Colors.green,
+                                                          Colors
+                                                              .lightGreenAccent
+                                                        ],
+                                                      ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              20),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+
+                                          SizedBox(
+                                              width: AppSizes.width * 0.02),
+
+                                          // Следующий уровень справа
+                                          Container(
+                                            width: AppSizes.width * 0.09,
+                                            height: AppSizes.height * 0.04,
+                                            alignment: Alignment.center,
+                                            decoration: BoxDecoration(
+                                              color: Colors.black,
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Text(
+                                              '$nextLevel',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
                           ),
                           Positioned(
                             top: AppSizes.height *
-                                0.55, // Поднимаем контейнер вверх
+                                0.60, // Поднимаем контейнер вверх
                             left: 0,
                             right: 0,
                             child: Container(
@@ -370,8 +487,7 @@ class _BalancePageState extends State<BalancePage> {
                                           Route route = MaterialPageRoute(
                                               builder: (context) =>
                                                   CurrencyInfo());
-                                          Navigator.push(
-                                              context, route);
+                                          Navigator.push(context, route);
                                         },
                                         child: Container(
                                           width: AppSizes.width * 0.43,
@@ -490,12 +606,11 @@ class _BalancePageState extends State<BalancePage> {
                               GestureDetector(
                                 onTap: () {
                                   Route route = MaterialPageRoute(
-                                      builder: (context) => TopPage());
+                                      builder: (context) => TopExperiencePage());
                                   Navigator.push(context, route);
                                 },
                                 child: Container(
                                   width: AppSizes.width,
-                                  height: AppSizes.height * 0.19,
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(16),
                                     // border: Border.all(
@@ -514,8 +629,68 @@ class _BalancePageState extends State<BalancePage> {
                                     padding: EdgeInsets.only(
                                       left: AppSizes.width * 0.05,
                                       right: AppSizes.width * 0.05,
-                                      top: AppSizes.width * 0.05,
-                                      bottom: AppSizes.width * 0.085,
+                                      top: AppSizes.width * 0.07,
+                                      bottom: AppSizes.width * 0.065,
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Список лучших по \nуровням',
+                                          style: TextStyle(
+                                            color: Color(0xFF004B08),
+                                            fontSize: AppSizes.width * 0.06,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          textAlign: TextAlign.start,
+                                        ),
+                                        Align(
+                                          alignment: Alignment.centerRight,
+                                          child: Text(
+                                            'Топ 100',
+                                            style: TextStyle(
+                                              color: Color(0xFF148305),
+                                              fontSize: AppSizes.width * 0.035,
+                                            ),
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: AppSizes.height * 0.01,),
+                              GestureDetector(
+                                onTap: () {
+                                  Route route = MaterialPageRoute(
+                                      builder: (context) => TopPage());
+                                  Navigator.push(context, route);
+                                },
+                                child: Container(
+                                  width: AppSizes.width,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(16),
+                                    // border: Border.all(
+                                    //   color: Color(0xFFA7EC6A), // Цвет границы
+                                    //   width: 2,
+                                    // ),
+                                    image: DecorationImage(
+                                      image: AssetImage(
+                                          'assets/images/balance_container_background4.png'),
+                                      // Путь к изображению
+                                      fit: BoxFit
+                                          .cover, // Растянуть изображение на весь контейнер
+                                    ),
+                                  ),
+                                  child: Padding(
+                                    padding: EdgeInsets.only(
+                                      left: AppSizes.width * 0.05,
+                                      right: AppSizes.width * 0.05,
+                                      top: AppSizes.width * 0.07,
+                                      bottom: AppSizes.width * 0.065,
                                     ),
                                     child: Column(
                                       crossAxisAlignment:
@@ -524,7 +699,7 @@ class _BalancePageState extends State<BalancePage> {
                                           MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
-                                          'Список лучших за \nДекабрь',
+                                          'Список лучших по \nмонетам',
                                           style: TextStyle(
                                             color: Color(0xFF004B08),
                                             fontSize: AppSizes.width * 0.06,

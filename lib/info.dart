@@ -139,55 +139,44 @@ class _PageInfoState extends State<PageInfo> {
     }
 
     if (hasError) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      return Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSizes.width * 0.05),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              SizedBox(height: AppSizes.height * 0.35),
               Icon(
-                Icons.wifi_off,
-                size: 100,
-                color: Colors.grey[400],
+                Icons.wifi_off_rounded,
+                size: AppSizes.width * 0.45,
+                color: Colors.white,
               ),
-              SizedBox(height: 20),
+              SizedBox(height: AppSizes.height * 0.01),
               Text(
-                "Нет подключения к интернету",
+                "Соединение потеряно",
                 style: TextStyle(
                   fontSize: 20,
-                  color: Colors.grey[800],
+                  color: Colors.white,
+                  decoration: TextDecoration.none,
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 8),
-              Text(
-                "Пожалуйста, проверьте соединение и попробуйте снова.",
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 24),
+              SizedBox(height: AppSizes.height * 0.2),
               ElevatedButton.icon(
                 onPressed: _initializeApp,
-                icon: Icon(Icons.refresh),
-                label: Text("Повторить"),
+                label: Text("Обновить"),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
+                  backgroundColor: Colors.green,
                   foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                  padding: EdgeInsets.symmetric(horizontal: AppSizes.width * 0.08, vertical: AppSizes.height * 0.02),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  textStyle: TextStyle(fontSize: 16),
+                  textStyle: TextStyle(fontSize: AppSizes.width * 0.05),
                   elevation: 4,
                   shadowColor: Colors.black45,
                 ),
               ),
             ],
           ),
-        ),
       );
 
     }

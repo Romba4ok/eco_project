@@ -25,7 +25,10 @@ class DatabaseService {
   static String? userRole;
   static String? userRank;
   static String? selectRank;
+  static String? completedExamples;
+  static String? userIdi;
   static int? balance;
+  static int? experience;
   static int? userPosition;
 
   Future<void> signOut() async {
@@ -53,11 +56,12 @@ class DatabaseService {
         final response = await _supabase
             .from('users')
             .select(
-                'user, name, email, state, city, avatar, balance, rank_user, select_rank')
+                'id, user, name, email, state, city, avatar, balance, rank_user, select_rank, experience, completed_examples')
             .eq('id', user.id)
             .single();
         print(response);
         if (response != null && response['user'] != null) {
+          userIdi = response['id'];
           userRole = response['user'];
           userName = response['name'];
           userEmail = response['email'];
@@ -68,6 +72,8 @@ class DatabaseService {
           balance = response['balance'];
           userRank = response['rank_user'];
           selectRank = response['select_rank'];
+          experience = response['experience'];
+          completedExamples = response['completed_examples'];
           print(response['balance']);
           print("User role: $userRole");
 
@@ -122,6 +128,7 @@ class DatabaseService {
           'user': 'user',
           'rank_user': '',
         });
+        userIdi = userId;
         userRole = 'user';
         userName = name;
         userEmail = email;
@@ -171,8 +178,8 @@ class DatabaseService {
       final usersResponse = await _supabase
           .from('users')
           .select(
-              'id, name, email, password, state, city, avatar, user, rank_user, balance')
-          .order('balance', ascending: false);
+              'id, name, email, password, state, city, avatar, user, rank_user, balance, experience, completed_examples')
+          .order('experience', ascending: false);
 
       if (usersResponse.isEmpty) {
         print('Ошибка: База данных пустая');
@@ -193,6 +200,7 @@ class DatabaseService {
           await _supabase.from('users').select().eq('id', userId).single();
 
       if (response != null) {
+        userIdi = response['id'];
         userRole = response['user'];
         userName = response['name'];
         userEmail = response['email'];
@@ -203,6 +211,8 @@ class DatabaseService {
         balance = response['balance']; // balance остается int
         userRank = response['rank_user'];
         selectRank = response['select_rank'];
+        experience = response['experience'];
+        completedExamples = response['completed_examples'];
         userPosition = position; // rank остается int
 
         return {
@@ -216,8 +226,12 @@ class DatabaseService {
           'user': response['user'] as String? ?? '',
           'rank_user': response['rank_user'] as String? ?? '',
           'select_rank': response['select_rank'] as String? ?? '',
+          'completed_examples': response['completed_examples'] as String? ?? '',
           'balance': response['balance'] != null
               ? response['balance'].toString()
+              : '0',
+          'experience': response['experience'] != null
+              ? response['experience'].toString()
               : '0',
           'position': position?.toString() ?? '0', // Добавлено: место в топе
         };
@@ -528,6 +542,53 @@ class DatabaseService {
     }).toList();
   }
 
+  Future<List<Map<String, dynamic>>> fetchLeaderboardExp() async {
+    print("🔍 Отправляем запрос в Supabase...");
+
+    final supabase = Supabase.instance.client;
+
+    final response = await supabase
+        .from('users')
+        .select('id, avatar, name, balance, experience, select_rank') // добавлен experience
+        .order('experience', ascending: false);
+
+    print("📩 Ответ из Supabase: $response");
+
+    if (response.isEmpty) {
+      print("⚠️ Ошибка: Supabase вернул пустой массив!");
+      return [];
+    }
+
+    return response.asMap().entries.map((entry) {
+      final index = entry.key;
+      final user = entry.value;
+
+      final int rank = index + 1;
+      final int balance = _parseBalance(user['balance']);
+      final int experience = int.tryParse(user['experience']?.toString() ?? '0') ?? 0;
+
+      final int? selectedRank = int.tryParse(user['select_rank']?.toString() ?? '-1');
+
+      Map<String, dynamic>? badge = (selectedRank != null &&
+          selectedRank >= 0 &&
+          selectedRank < Titles.titles.length)
+          ? Titles.titles[selectedRank]
+          : null;
+
+      return {
+        'rank': rank,
+        'name': user['name'] ?? 'Аноним',
+        'balance': balance,
+        'experience': experience,
+        'avatar': user['avatar'] ?? '',
+        'badge': badge?['name'],
+        'badgeGradient': badge?['color'],
+        'badgeTextGradient': badge?['colorText'],
+      };
+    }).toList();
+  }
+
+
   int _parseBalance(dynamic balance) {
     if (balance == null) return 0;
     if (balance is int) return balance;
@@ -584,6 +645,7 @@ class DatabaseService {
             'coins': e['coins']?.toString() ?? '',
             'experience': e['experience']?.toString() ?? '',
             'sponsor': e['sponsor']?.toString() ?? '',
+            'date_added': e['date_added']?.toString() ?? '',
           };
         }).toList();
       } else {
@@ -614,6 +676,7 @@ class DatabaseService {
             'coins': e['coins']?.toString() ?? '',
             'experience': e['experience']?.toString() ?? '',
             'sponsor': e['sponsor']?.toString() ?? '',
+            'date_added': e['date_added']?.toString() ?? '',
           };
         }).toList();
       } else {
@@ -712,4 +775,284 @@ class DatabaseService {
       print('Ошибка при обновлении поста: $e');
     }
   }
+
+  Future<void> updateUserRanksByExperience(int experience) async {
+    final supabase = Supabase.instance.client;
+
+    // Порог опыта для каждого ранга
+    final List<int> expThresholds = [
+      50000,   // ранг 0
+      100000,  // ранг 1
+      150000,  // ранг 2
+      200000,  // ранг 3
+      300000,  // ранг 4
+      400000,  // ранг 5
+    ];
+
+    // Собираем список достигнутых рангов
+    List<String> unlockedRanks = [];
+    for (int i = 0; i < expThresholds.length; i++) {
+      if (experience >= expThresholds[i]) {
+        unlockedRanks.add(i.toString());
+      } else {
+        break;
+      }
+    }
+
+    final String rankString = unlockedRanks.join(',');
+
+    // Обновляем поле в базе данных
+    await supabase.from('users').update({
+      'rank_user': rankString, // имя поля можешь поменять
+    }).eq('id', userIdi!);
+
+    print("✅ Обновлено: $rankString");
+  }
+
+  Future<List<Map<String, String>>> fetchExamplesUsers() async {
+    try {
+      // Шаг 1: Получить completed_examples пользователя
+      final userResponse = await _supabase
+          .from('users')
+          .select('completed_examples')
+          .eq('id', userIdi!)
+          .single();
+
+      List<String> completedIds = [];
+      if (userResponse != null && userResponse['completed_examples'] != null) {
+        completedIds = userResponse['completed_examples']
+            .toString()
+            .split(',')
+            .map((id) => id.trim())
+            .where((id) => id.isNotEmpty)
+            .toList();
+      }
+
+      // Шаг 2: Получить все примеры
+      final response = await _supabase.from('examples').select();
+
+      if (response != null && response is List) {
+        final mapped = response.where((e) {
+          final special = e['special'];
+          final id = e['id'].toString();
+          // Фильтруем по special и отсутствию id в completed_examples
+          return (special == null || special.toString().trim().isEmpty) &&
+              !completedIds.contains(id);
+        }).map((e) {
+          return {
+            'id': e['id'].toString(),
+            'title': e['title']?.toString() ?? '',
+            'description': e['description']?.toString() ?? '',
+            'special': e['special']?.toString() ?? '',
+            'time': e['time']?.toString() ?? '',
+            'coins': e['coins']?.toString() ?? '',
+            'experience': e['experience']?.toString() ?? '',
+            'sponsor': e['sponsor']?.toString() ?? '',
+            'date_added': e['date_added']?.toString() ?? '',
+          };
+        }).toList();
+
+        // Шаг 3: Сортировка: спонсорские первыми
+        mapped.sort((a, b) {
+          final aSponsor = a['sponsor']?.trim().isNotEmpty ?? false;
+          final bSponsor = b['sponsor']?.trim().isNotEmpty ?? false;
+          return bSponsor.toString().compareTo(aSponsor.toString());
+        });
+
+        return mapped;
+      } else {
+        print('Ошибка: Пустой ответ от Supabase');
+        return [];
+      }
+    } catch (e) {
+      print('Ошибка при загрузке данных: $e');
+      return [];
+    }
+  }
+
+
+  Future<List<Map<String, String>>> fetchExamplesUsersSpecial() async {
+    try {
+      // Шаг 1: Получаем список ID выполненных заданий
+      final userResponse = await _supabase
+          .from('users')
+          .select('completed_examples')
+          .eq('id', userIdi!)
+          .single();
+
+      List<String> completedIds = [];
+      if (userResponse != null && userResponse['completed_examples'] != null) {
+        completedIds = userResponse['completed_examples']
+            .toString()
+            .split(',')
+            .map((id) => id.trim())
+            .where((id) => id.isNotEmpty)
+            .toList();
+      }
+
+      // Шаг 2: Получаем задания
+      final response = await _supabase.from('examples').select();
+
+      if (response != null && response is List) {
+        final now = DateTime.now().toUtc();
+
+        final mapped = response.where((e) {
+          final special = e['special']?.toString().trim() ?? '';
+          final rawTime = e['time']?.toString();
+          final id = e['id'].toString();
+
+          if (special.isEmpty || rawTime == null) return false;
+          if (completedIds.contains(id)) return false; // Исключаем выполненные
+
+          try {
+            final targetTime = DateTime.parse(rawTime);
+            return targetTime.isAfter(now); // Только не истёкшие
+          } catch (e) {
+            return false;
+          }
+        }).map((e) {
+          return {
+            'id': e['id'].toString(),
+            'title': e['title']?.toString() ?? '',
+            'description': e['description']?.toString() ?? '',
+            'special': e['special']?.toString() ?? '',
+            'time': e['time']?.toString() ?? '',
+            'coins': e['coins']?.toString() ?? '',
+            'experience': e['experience']?.toString() ?? '',
+            'sponsor': e['sponsor']?.toString() ?? '',
+            'date_added': e['date_added']?.toString() ?? '',
+          };
+        }).toList();
+
+        // Шаг 3: Сортировка — сначала со спонсором
+        mapped.sort((a, b) {
+          final aSponsor = a['sponsor']?.trim().isNotEmpty ?? false;
+          final bSponsor = b['sponsor']?.trim().isNotEmpty ?? false;
+          return bSponsor.toString().compareTo(aSponsor.toString());
+        });
+
+        return mapped;
+      } else {
+        print('Ошибка: Пустой ответ от Supabase');
+        return [];
+      }
+    } catch (e) {
+      print('Ошибка при загрузке данных: $e');
+      return [];
+    }
+  }
+
+
+  Future<void> sendExample(
+      File image, String id_user, String id_example, String status) async {
+    try {
+      // Шаг 1: Загрузка изображения в Supabase Storage
+      final fileName =
+          'examples_images/${DateTime.now().millisecondsSinceEpoch}.png';
+      await _supabase.storage
+          .from('examples')
+          .upload(fileName, image);
+
+      // Шаг 2: Получение URL изображения
+      final imageUrl = await _supabase.storage
+          .from('examples')
+          .getPublicUrl(fileName);
+      print(imageUrl);
+
+      // Шаг 3: Добавление данных о посте в таблицу 'checking_tasks'
+      await _supabase.from('checking_tasks').insert({
+        'image': imageUrl,
+        'id_user': id_user,
+        'id_example': id_example,
+        'status': status,
+      });
+
+      print('Пост успешно добавлен в Realtime Database!');
+
+      // Шаг 4: Обновление completed_examples у пользователя
+      final userResponse = await _supabase
+          .from('users')
+          .select('completed_examples')
+          .eq('id', id_user)
+          .single();
+
+      if (userResponse != null && userResponse['completed_examples'] != null) {
+        String current = userResponse['completed_examples'];
+        List<String> completedList = current.split(',').where((e) => e.isNotEmpty).toList();
+
+        if (!completedList.contains(id_example)) {
+          completedList.add(id_example);
+          String updated = completedList.join(',');
+
+          await _supabase
+              .from('users')
+              .update({'completed_examples': updated})
+              .eq('id', id_user);
+
+          print('completed_examples обновлен: $updated');
+        } else {
+          print('id_example уже есть в completed_examples');
+        }
+      } else {
+        // Если нет текущего значения — создаём его
+        await _supabase
+            .from('users')
+            .update({'completed_examples': id_example})
+            .eq('id', id_user);
+
+        print('completed_examples создан с первым значением: $id_example');
+      }
+
+    } catch (error) {
+      print('Ошибка: $error');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchUserTasksAndDetails() async {
+    List<Map<String, dynamic>> taskItems = [];
+
+    try {
+      // Получаем список заданий пользователя
+      final tasksResponse = await _supabase
+          .from('checking_tasks')
+          .select('id_example, status')
+          .eq('id_user', userIdi!);
+
+      if (tasksResponse == null || tasksResponse.isEmpty) {
+        print('У пользователя нет заданий.');
+        return taskItems;
+      }
+
+      for (var task in tasksResponse) {
+        final int idExample = task['id_example'];
+        final String status = task['status'];
+
+        // Теперь не используем .single(), а обычный select
+        final exampleResponse = await _supabase
+            .from('examples')
+            .select('title, description')
+            .eq('id', idExample);
+
+        if (exampleResponse != null && exampleResponse.isNotEmpty) {
+          // Берем первую запись
+          final example = exampleResponse[0];
+
+          taskItems.add({
+            'id_example': idExample,
+            'status': status,
+            'title': example['title'] ?? '',
+            'description': example['description'] ?? '',
+          });
+        } else {
+          print('Не найден example для id $idExample');
+        }
+      }
+    } catch (error) {
+      print('Ошибка при получении данных: $error');
+    }
+
+    return taskItems;
+  }
+
+
 }

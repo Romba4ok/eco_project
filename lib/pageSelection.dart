@@ -34,6 +34,7 @@ class _StatePageSelection extends State<PageSelection> {
 
   Future<void> _initializeApp() async {
     await AppPermission.checkAndRequestLocationPermission();
+    await AppPermission.checkAndRequestCameraPermission();
     await RequestCheck.init();
   }
 

@@ -48,6 +48,7 @@ dependencies:
   fl_chart: ^0.63.0
   smooth_page_indicator:
   syncfusion_flutter_gauges:
+  camera:
 
 flutter_native_splash:
   background_image: "assets/app/loadPage.png"  # Путь к изображению
@@ -121,13 +122,19 @@ flutter:
      - assets/app/notificationLogo.png
      - assets/images/top_background.png
      - assets/images/dotted_container.png
+     - assets/images/background_container_examples.png
+     - assets/images/background_container_examples_sponsor.png
      - assets/icons/number_one.png
      - assets/icons/number_two.png
      - assets/icons/number_three.png
      - assets/images/sunset.png
      - assets/images/sunrise.png
      - assets/images/background_editExample.png
+     - assets/images/background_container_completed_examples.png
      - assets/icons/ads.png
+     - assets/icons/lvl.png
+     - assets/icons/sponsor_check_examples.png
+     - assets/icons/coin.png
   #   - images/a_dot_ham.jpeg
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

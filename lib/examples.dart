@@ -1,271 +1,307 @@
+import 'package:Eco/appSizes.dart';
+import 'package:Eco/examples_completed.dart';
+import 'package:Eco/examples_examples.dart';
+import 'package:Eco/examples_special.dart';
 import 'package:Eco/pageSelection.dart';
+import 'package:Eco/supabase_config.dart';
 import 'package:flutter/material.dart';
-
-
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ExamplesPage extends StatefulWidget {
-  const ExamplesPage({super.key});
-
   @override
   _ExamplesPageState createState() => _ExamplesPageState();
 }
 
-class _ExamplesPageState extends State<ExamplesPage>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
+class _ExamplesPageState extends State<ExamplesPage> {
+  bool isLoading = true;
+  int totalExp = DatabaseService.experience ?? 0;
 
-  final List<Task> tasks = [
-    Task(
-        title: "День без машины",
-        description: "Не пользуйтесь машиной в течение дня",
-        date: "25.02.2025",
-        progress: 0.7),
-    Task(
-        title: "Сортировка мусора",
-        description: "Разделите мусор и сдайте перерабатываемое",
-        date: "26.02.2025",
-        progress: 0.4),
-    Task(
-        title: "Эко-поход",
-        description: "Посетите парк и соберите мусор",
-        date: "27.02.2025",
-        progress: 0.8),
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  final DatabaseService _databaseService = DatabaseService();
+  final SupabaseClient supabase = Supabase.instance.client;
+  String avatar = DatabaseService.userAvatar ?? '';
+  String name = DatabaseService.userName ?? '';
+  int balance = DatabaseService.balance ?? 0;
+
+  int _selectedIndex = 0;
+
+  Future<void> _loadUserData() async {
+    User? user = supabase.auth.currentUser;
+    if (user != null) {
+      String userId = user.id;
+      Map<String, String>? fetchedUser =
+          await _databaseService.fetchUser(userId);
+      await _databaseService.fetchExamplesUsers();
+      if (mounted) {
+        setState(() {
+          avatar = fetchedUser?['avatar'] ?? '';
+          name = fetchedUser?['name'] ?? '';
+          balance = int.tryParse(fetchedUser?['balance'] ?? '0') ?? 0;
+          totalExp = int.tryParse(fetchedUser?['experience'] ?? '0') ?? 0;
+          _databaseService.updateUserRanksByExperience(totalExp);
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  final List<String> tabs = ['Задания', 'Особые', 'Выполненные'];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  final List<Widget Function(Function(int))> _pages = [
+    (togglePage) => ExamplesExamplesPage(togglePage: togglePage),
+    (togglePage) => ExamplesSpecialPage(togglePage: togglePage),
+    (togglePage) => ExamplesCompletedPage(togglePage: togglePage),
   ];
 
   @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    const int expPerLevel = 10000;
+    int currentLevel = (totalExp ~/ expPerLevel);
+    int nextLevel = currentLevel + 1;
+    int expInCurrentLevel = totalExp % expPerLevel;
+    double progress = expInCurrentLevel / expPerLevel;
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Column(
-        children: [
-          // 📌 Шапка
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-            decoration: const BoxDecoration(
-              color: Colors.black,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Назад
-                IconButton(
-                  icon: const Icon(Icons.arrow_back,
-                      color: Colors.white, size: 24),
-                  onPressed: () {
-                    Route route = MaterialPageRoute(builder: (context) => PageSelection());
-                    Navigator.pushReplacement(context, route);
-                  },
+      body: isLoading
+          ? Container(
+              width: AppSizes.width,
+              height: AppSizes.height,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/app/loadPage.png'),
+                  fit: BoxFit.cover,
                 ),
-                // Заголовок
-                const Expanded(
-                  child: Center(
-                    child: Text(
-                      "Ежедневные задания",
-                      style:
-                      TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              child: Center(
+                child: Container(
+                  width: AppSizes.width * 0.4,
+                  height: AppSizes.height * 0.35,
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/app/loadLogo.png'),
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
-                // Баланс + Аватар
+              ),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(
+                    top: AppSizes.height * 0.07,
+                    left: AppSizes.width * 0.03,
+                    right: AppSizes.width * 0.03,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Кнопка назад
+                      IconButton(
+                        icon: Icon(
+                          Icons.arrow_back,
+                          color: Colors.white,
+                          size: AppSizes.width * 0.08,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                      ),
+
+                      // Заголовок по центру
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            'Ежедневные задания',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: AppSizes.width * 0.07,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Аватар справа
+                      CircleAvatar(
+                        radius: AppSizes.width * 0.06,
+                        backgroundImage:
+                            (avatar.isNotEmpty ? NetworkImage(avatar) : null),
+                        backgroundColor:
+                            avatar.isEmpty ? Colors.white : Colors.transparent,
+                        child: avatar.isEmpty
+                            ? Text(
+                                name.isNotEmpty ? name[0] : '?',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: AppSizes.width * 0.08,
+                                ),
+                              )
+                            : null,
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  height: AppSizes.height * 0.01,
+                ),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.monetization_on,
-                        color: Colors.green, size: 20),
-                    const SizedBox(width: 5),
-                    const Text(
-                      "100000",
-                      style: TextStyle(fontSize: 16, color: Colors.white),
+                    Container(
+                      width: AppSizes.width * 0.06,
+                      height: AppSizes.width * 0.06,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage('assets/icons/coin.png'),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
                     ),
-                    const SizedBox(width: 10),
-                    CircleAvatar(
-                      backgroundColor: Colors.grey[800],
-                      backgroundImage: AssetImage("assets/avatar.jpg"),
-                      radius: 16,
+                    Text(
+                      ': $balance',
+                      // ПРАВИЛЬНО
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: AppSizes.width * 0.055),
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-          // 🔹 Фильтры
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: const [
-                FilterButton(title: "Популярное", isSelected: true),
-                FilterButton(title: "Особое"),
-                FilterButton(title: "Выполнено"),
-              ],
-            ),
-          ),
-          // 📝 Список заданий
-          Expanded(
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: ListView.builder(
-                itemCount: tasks.length,
-                itemBuilder: (context, index) {
-                  return TaskCard(task: tasks[index]);
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+                SizedBox(height: AppSizes.height * 0.02),
+                Padding(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: AppSizes.width * 0.15),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Текущий уровень слева
+                      Container(
+                        width: AppSizes.width * 0.09,
+                        height: AppSizes.height * 0.04,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: Colors.lightGreen,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '$currentLevel',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
 
-// 🎯 Класс модели задания
-class Task {
-  final String title;
-  final String description;
-  final String date;
-  final double progress;
+                      SizedBox(width: AppSizes.width * 0.02),
 
-  Task(
-      {required this.title,
-        required this.description,
-        required this.date,
-        required this.progress});
-}
+                      // Прогресс бар
+                      Flexible(
+                        child: Stack(
+                          children: [
+                            Container(
+                              height: AppSizes.height * 0.04,
+                              decoration: BoxDecoration(
+                                color: Color(0xFF252222),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                            FractionallySizedBox(
+                              widthFactor: progress,
+                              // значение от 0.0 до 1.0
+                              child: Container(
+                                height: AppSizes.height * 0.04,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.green,
+                                      Colors.lightGreenAccent
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
 
-// 🎯 Виджет кнопки фильтра
-class FilterButton extends StatelessWidget {
-  final String title;
-  final bool isSelected;
+                      SizedBox(width: AppSizes.width * 0.02),
 
-  const FilterButton({super.key, required this.title, this.isSelected = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isSelected ? Colors.green : Colors.transparent,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.green),
-      ),
-      child: Text(title, style: const TextStyle(color: Colors.white)),
-    );
-  }
-}
-
-// 🎯 Виджет карточки задания
-class TaskCard extends StatefulWidget {
-  final Task task;
-
-  const TaskCard({super.key, required this.task});
-
-  @override
-  _TaskCardState createState() => _TaskCardState();
-}
-
-class _TaskCardState extends State<TaskCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _progressAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    );
-    _progressAnimation =
-        Tween<double>(begin: 0, end: widget.task.progress).animate(_controller);
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[900],
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(widget.task.title,
-              style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white)),
-          const SizedBox(height: 5),
-          Text(widget.task.description,
-              style: const TextStyle(fontSize: 14, color: Colors.white70)),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              const Icon(Icons.calendar_today, color: Colors.green, size: 16),
-              const SizedBox(width: 5),
-              Text(widget.task.date,
-                  style: const TextStyle(fontSize: 14, color: Colors.white70)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          AnimatedBuilder(
-            animation: _progressAnimation,
-            builder: (context, child) {
-              return Column(
-                children: [
-                  LinearProgressIndicator(
-                    value: _progressAnimation.value,
-                    backgroundColor: Colors.white10,
-                    valueColor:
-                    const AlwaysStoppedAnimation<Color>(Colors.green),
+                      // Следующий уровень справа
+                      Container(
+                        width: AppSizes.width * 0.09,
+                        height: AppSizes.height * 0.04,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: Color(0xFF252222),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '$nextLevel',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 5),
-                  Text("${(_progressAnimation.value * 100).toInt()}% выполнено",
-                      style:
-                      const TextStyle(fontSize: 14, color: Colors.white)),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 10),
-          ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey[800],
-              minimumSize: const Size(double.infinity, 40),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
+                ),
+                SizedBox(
+                  height: AppSizes.height * 0.02,
+                ),
+                Padding(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: AppSizes.width * 0.04),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: List.generate(tabs.length, (index) {
+                      final isSelected = _selectedIndex == index;
+
+                      return GestureDetector(
+                        onTap: () => setState(() => _selectedIndex = index),
+                        child: Container(
+                          width: AppSizes.width * 0.28,
+                          height: AppSizes.height * 0.05,
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? Color(0xFF68E30B)
+                                : Colors.transparent,
+                            border: Border.all(color: Color(0xFF68E30B)),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Center(
+                            child: Text(
+                              tabs[index],
+                              style: TextStyle(
+                                color: isSelected
+                                    ? Colors.black
+                                    : Color(0xFF68E30B),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+                Expanded(
+                  child: _pages[_selectedIndex](_onItemTapped),
+                )
+              ],
             ),
-            child: const Text("Принять вызов",
-                style: TextStyle(fontSize: 16, color: Colors.white)),
-          ),
-        ],
-      ),
     );
   }
 }
